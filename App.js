@@ -1,11 +1,10 @@
 import { StatusBar } from 'expo-status-bar';
-import { Text, SafeAreaView } from 'react-native';
+import { Text, View } from 'react-native';
 
 export default function App() {
     return (
-        <SafeAreaView className='flex-1 justify-center items-center bg-red-200'>
-            <Text>Init FE Mobile</Text>
-            <StatusBar style='auto' />
-        </SafeAreaView>
+        <View className='flex-1 items-center justify-center bg-red-200'>
+            <Text className='text-2xl font-bold'>Init FE</Text>
+        </View>
     );
 }
