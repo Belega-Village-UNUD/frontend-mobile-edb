@@ -1,11 +1,10 @@
 import { Text } from 'react-native';
-import React from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function ProfileScreen() {
+export default function SearchScreen() {
     return (
         <SafeAreaView>
-            <Text>Profile Screen</Text>
+            <Text>Search</Text>
         </SafeAreaView>
     );
 }
