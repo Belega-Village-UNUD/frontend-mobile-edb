@@ -6,7 +6,7 @@ const OnboardingScreen = () => {
     const navigation = useNavigation();
     useEffect(() => {
         setTimeout(() => {
-            navigation.replace('Home');
+            navigation.replace('Bottom Navigation');
         }, 2000);
     });
     return (
