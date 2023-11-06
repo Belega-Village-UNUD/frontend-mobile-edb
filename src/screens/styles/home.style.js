@@ -15,22 +15,40 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
     },
-    cartCount: {
-        position: 'absolute',
-        bottom: 16,
-        width: 16,
-        height: 16,
-        borderRadius: 8,
-        alignItems: 'center',
-        backgroundColor: COLORS.primary,
+    searchContainer: {
+        flexDirection: 'row',
         justifyContent: 'center',
-        zIndex: 999,
+        alignContent: 'center',
+        backgroundColor: COLORS.secondary,
+        borderRadius: SIZES.medium,
+        marginHorizontal: SIZES.small,
+        marginVertical: SIZES.xSmall - 7,
+        height: 50,
     },
-    cartNumber: {
+    searchIcon: {
+        marginHorizontal: 10,
+        marginVertical: 10,
+        color: COLORS.gray3,
+    },
+    searchWrapper: {
+        flex: 1,
+        backgroundColor: COLORS.secondary,
+        marginRight: SIZES.small,
+        borderRadius: SIZES.small,
+    },
+    searchInput: {
         fontFamily: 'regular',
-        fontWeight: '600',
-        fontSize: 10,
-        color: COLORS.lightWhite,
+        width: '100%',
+        height: '100%',
+        paddingHorizontal: SIZES.small,
+    },
+    searchBtn: {
+        width: 50,
+        height: '100%',
+        borderRadius: SIZES.medium,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColork: COLORS.primary,
     },
 });
 

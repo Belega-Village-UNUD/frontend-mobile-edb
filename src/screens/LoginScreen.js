@@ -1,15 +1,20 @@
 import { useState } from 'react';
-import { ScrollView, View } from 'react-native';
-import { Image, Text } from 'react-native';
+import {
+    ScrollView,
+    View,
+    Alert,
+    Image,
+    Text,
+    TextInput,
+    TouchableOpacity,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BackBtn, Button } from '../components';
 import styles from './styles/login.style';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
-import { TextInput } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS } from '../constants/theme';
-import { TouchableOpacity } from 'react-native';
 
 const validationSchema = Yup.object().shape({
     password: Yup.string()
@@ -25,6 +30,19 @@ export default function LoginScreen({ navigation }) {
     const [loader, setLoader] = useState(false);
     const [response, setResponse] = useState(null);
     const [obsecureText, setObsecureText] = useState(false);
+
+    const inValidForm = () => {
+        Alert.alert(
+            'Formulir Tidak Valid',
+            'Tolong lengkapi formulir dengan benar',
+            [
+                {
+                    text: 'Lanjutkan',
+                    onPress: () => console.log('Lanjutkan Ditekan'),
+                },
+            ]
+        );
+    };
 
     return (
         <ScrollView>
@@ -128,8 +146,8 @@ export default function LoginScreen({ navigation }) {
                                             <MaterialCommunityIcons
                                                 name={
                                                     obsecureText
-                                                        ? 'eye-outline'
-                                                        : 'eye-off-outline'
+                                                        ? 'eye-off-outline'
+                                                        : 'eye-outline'
                                                 }
                                                 size={20}
                                                 color={COLORS.gray3}
@@ -144,18 +162,38 @@ export default function LoginScreen({ navigation }) {
                                     )}
                                 </View>
                                 <Button
-                                    title={'L O G I N'}
-                                    onPress={isValid ? handleSubmit : () => {}}
+                                    title={'M A S U K'}
+                                    onPress={
+                                        isValid ? handleSubmit : inValidForm
+                                    }
                                     isValid={isValid}
                                 />
-                                <Text
-                                    style={styles.registration}
-                                    onPress={() =>
-                                        navigation.navigate('Register')
-                                    }
+                                <View
+                                    style={{
+                                        marginTop: -25,
+                                        flexDirection: 'row',
+                                    }}
                                 >
-                                    Belum punya akun? Daftar
-                                </Text>
+                                    <Text
+                                        style={styles.registration}
+                                        onPress={() =>
+                                            navigation.navigate('Signup')
+                                        }
+                                    >
+                                        Belum punya akun? Daftar
+                                        {'                  '}
+                                    </Text>
+                                    <Text
+                                        style={styles.forgotPassword}
+                                        onPress={() =>
+                                            navigation.navigate(
+                                                'Reset Password'
+                                            )
+                                        }
+                                    >
+                                        Lupa Password?
+                                    </Text>
+                                </View>
                             </View>
                         )}
                     </Formik>

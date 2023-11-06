@@ -48,7 +48,11 @@ const styles = StyleSheet.create({
     },
     registration: {
         marginTop: 20,
-        textAlign: 'center',
+        textAlign: 'left',
+    },
+    forgotPassword: {
+        marginTop: 20,
+        textAlign: 'right',
     },
 });
 
