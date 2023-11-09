@@ -7,6 +7,9 @@ import CartScreen from './CartScreen';
 import LoginScreen from './LoginScreen';
 import SignupScreen from './SignupScreen';
 import ResetPasswordScreen from './ResetPasswordScreen';
+import ChangePasswordScreen from './ChangePasswordScreen';
+import ForgotPasswordScreen from './ForgotPasswordScreen';
+import VerificationScreen from './VerificationScreen';
 
 export {
     HomeScreen,
@@ -18,4 +21,7 @@ export {
     LoginScreen,
     SignupScreen,
     ResetPasswordScreen,
+    ChangePasswordScreen,
+    ForgotPasswordScreen,
+    VerificationScreen,
 };
