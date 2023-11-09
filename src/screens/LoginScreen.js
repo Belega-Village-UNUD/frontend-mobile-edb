@@ -15,20 +15,27 @@ import { Formik } from 'formik';
 import * as Yup from 'yup';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS } from '../constants/theme';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 const validationSchema = Yup.object().shape({
     password: Yup.string()
         .min(8, 'Password terlalu pendek')
-        .required('Password tidak boleh kosong'),
+        .required('Password tidak boleh kosong')
+        .matches(
+            /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/,
+            'Password harus memiliki setidaknya satu simbol unik'
+        ),
 
     email: Yup.string()
         .email('Email tidak valid')
-        .required('Email tidak boleh kosong'),
+        .required('Email tidak boleh kosong')
+        .matches(/\S+@\S+\.\S+/, 'Email tidak valid'),
 });
 
 export default function LoginScreen({ navigation }) {
     const [loader, setLoader] = useState(false);
-    const [response, setResponse] = useState(null);
+    // const [responseData, setResponseData] = useState(null);
     const [obsecureText, setObsecureText] = useState(false);
 
     const inValidForm = () => {
@@ -44,6 +51,42 @@ export default function LoginScreen({ navigation }) {
         );
     };
 
+    const handleSetUserLogin = async (values) => {
+        setLoader(true);
+        try {
+            const endpoint =
+                'https://belega-commerce-api-staging-tku2lejm6q-et.a.run.app/api/auth/login';
+            const data = values;
+            const response = await axios.post(endpoint, data);
+            if (response.data.status === 200) {
+                setLoader(false);
+                //help to get payload email and token
+                const { email, token } = response.data.data;
+                //save to async storage
+                await AsyncStorage.setItem(
+                    'user',
+                    JSON.stringify({ email, token })
+                );
+                navigation.navigate('Bottom Navigation', { screen: 'Home' });
+            }
+        } catch (error) {
+            {
+                Alert.alert('Error Login', 'Masukkan Kredensial yang Benar', [
+                    {
+                        text: 'Batalkan',
+                        onPress: () => {},
+                    },
+                    {
+                        text: 'Lanjutkan',
+                        onPress: () => {},
+                    },
+                ]);
+            }
+        } finally {
+            setLoader(false);
+        }
+    };
+    console.log(loader);
     return (
         <ScrollView>
             <SafeAreaView style={{ marginHorizontal: 20 }}>
@@ -57,7 +100,9 @@ export default function LoginScreen({ navigation }) {
                     <Formik
                         initialValues={{ email: '', password: '' }}
                         validationSchema={validationSchema}
-                        onSubmit={(values) => console.log(values)}
+                        onSubmit={(values) => handleSetUserLogin(values)}
+                        validateOnMount
+                        validateOnChange
                     >
                         {({
                             handleChange,
@@ -71,7 +116,6 @@ export default function LoginScreen({ navigation }) {
                         }) => (
                             <View>
                                 <View style={styles.wrapper}>
-                                    <Text style={styles.label}>Email</Text>
                                     <View
                                         style={styles.inputWrapper(
                                             touched.email
@@ -107,7 +151,6 @@ export default function LoginScreen({ navigation }) {
                                     )}
                                 </View>
                                 <View style={styles.wrapper}>
-                                    <Text style={styles.label}>Password</Text>
                                     <View
                                         style={styles.inputWrapper(
                                             touched.password
@@ -161,38 +204,41 @@ export default function LoginScreen({ navigation }) {
                                         </Text>
                                     )}
                                 </View>
-                                <Button
-                                    title={'M A S U K'}
-                                    onPress={
-                                        isValid ? handleSubmit : inValidForm
-                                    }
-                                    isValid={isValid}
-                                />
-                                <View
-                                    style={{
-                                        marginTop: -25,
-                                        flexDirection: 'row',
-                                    }}
-                                >
-                                    <Text
-                                        style={styles.registration}
-                                        onPress={() =>
-                                            navigation.navigate('Signup')
+                                <View style={{ marginTop: -15 }}>
+                                    <Button
+                                        loader={loader}
+                                        title={'M A S U K'}
+                                        onPress={
+                                            isValid ? handleSubmit : inValidForm
                                         }
+                                        isValid={isValid}
+                                    />
+                                    <View
+                                        style={{
+                                            marginTop: -25,
+                                            flexDirection: 'row',
+                                        }}
                                     >
-                                        Belum punya akun? Daftar
-                                        {'                  '}
-                                    </Text>
-                                    <Text
-                                        style={styles.forgotPassword}
-                                        onPress={() =>
-                                            navigation.navigate(
-                                                'Reset Password'
-                                            )
-                                        }
-                                    >
-                                        Lupa Password?
-                                    </Text>
+                                        <Text
+                                            style={styles.registration}
+                                            onPress={() =>
+                                                navigation.navigate('Signup')
+                                            }
+                                        >
+                                            Belum punya akun? Daftar
+                                            {'                  '}
+                                        </Text>
+                                        <Text
+                                            style={styles.forgotPassword}
+                                            onPress={() =>
+                                                navigation.navigate('Auth', {
+                                                    screen: 'Forgot Password',
+                                                })
+                                            }
+                                        >
+                                            Lupa Password?
+                                        </Text>
+                                    </View>
                                 </View>
                             </View>
                         )}

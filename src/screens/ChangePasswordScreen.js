@@ -15,8 +15,17 @@ import { Formik } from 'formik';
 import * as Yup from 'yup';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS } from '../constants/theme';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 const validationSchema = Yup.object().shape({
+    currentPassword: Yup.string()
+        .min(8, 'Password terlalu pendek')
+        .required('Password tidak boleh kosong')
+        .matches(
+            /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/,
+            'Password harus memiliki setidaknya satu simbol unik'
+        ),
     newPassword: Yup.string()
         .min(8, 'Password terlalu pendek')
         .required('Password tidak boleh kosong')
@@ -24,7 +33,6 @@ const validationSchema = Yup.object().shape({
             /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/,
             'Password harus memiliki setidaknya satu simbol unik'
         ),
-
     confirmNewPassword: Yup.string()
         .min(8, 'Password terlalu pendek')
         .required('Password tidak boleh kosong')
@@ -32,12 +40,11 @@ const validationSchema = Yup.object().shape({
             /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/,
             'Password harus memiliki setidaknya satu simbol unik'
         )
-        .oneOf([Yup.ref('password'), null], 'Password tidak cocok'),
+        .oneOf([Yup.ref('newPassword'), null], 'Password tidak cocok'),
 });
 
-export default function ResetPasswordScreen({ navigation }) {
+export default function ChangePasswordScreen({ navigation }) {
     const [loader, setLoader] = useState(false);
-    const [response, setResponse] = useState(null);
     const [obsecureText, setObsecureText] = useState(false);
 
     const inValidForm = () => {
@@ -53,6 +60,61 @@ export default function ResetPasswordScreen({ navigation }) {
         );
     };
 
+    const handleChangePassword = async (values) => {
+        setLoader(true);
+        try {
+            const endpoint =
+                'https://belega-commerce-api-staging-tku2lejm6q-et.a.run.app/api/auth/password/change';
+            const data = values;
+            const user = await AsyncStorage.getItem('user');
+            const { token } = JSON.parse(user);
+            const response = await axios.put(endpoint, data, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            if (response.data.status === 200) {
+                setLoader(false);
+                // if (values.newPassword === values.confirmNewPassword) {
+                Alert.alert(
+                    'Password Berhasil Diubah',
+                    'Password kamu berhasil diubah',
+                    [
+                        {
+                            text: 'Lanjutkan',
+                            onPress: () =>
+                                navigation.navigate('Bottom Navigation', {
+                                    screen: 'Profile',
+                                }),
+                        },
+                    ]
+                );
+            } else {
+                setLoader(false);
+                Alert.alert(
+                    'Password Gagal Diubah',
+                    'Password kamu gagal diubah',
+                    [
+                        {
+                            text: 'Kembali',
+                            onPress: () => {},
+                        },
+                    ]
+                );
+            }
+        } catch (e) {
+            setLoader(false);
+            Alert.alert('Error', e, [
+                {
+                    text: 'Kembali',
+                    onPress: () => {},
+                },
+            ]);
+        } finally {
+            setLoader(false);
+        }
+    };
+
     return (
         <ScrollView>
             <SafeAreaView style={{ marginHorizontal: 20 }}>
@@ -65,11 +127,12 @@ export default function ResetPasswordScreen({ navigation }) {
                     <Text style={styles.title}>Temukan Furnitur Kamu!</Text>
                     <Formik
                         initialValues={{
+                            currentPassword: '',
                             newPassword: '',
                             confirmNewPassword: '',
                         }}
                         validationSchema={validationSchema}
-                        onSubmit={(values) => console.log(values)}
+                        onSubmit={(values) => handleChangePassword(values)}
                         validateOnMount
                         validateOnChange
                     >
@@ -87,6 +150,66 @@ export default function ResetPasswordScreen({ navigation }) {
                                 <View style={styles.wrapper}>
                                     <View
                                         style={styles.inputWrapper(
+                                            touched.oldPassword
+                                                ? COLORS.primary
+                                                : COLORS.offwhite
+                                        )}
+                                    >
+                                        <MaterialCommunityIcons
+                                            name='lock-outline'
+                                            size={20}
+                                            color={COLORS.gray3}
+                                            style={styles.iconStyle}
+                                        />
+                                        <TextInput
+                                            secureTextEntry={obsecureText}
+                                            placeholder='Password Lama'
+                                            onFocus={() => {
+                                                setFieldTouched(
+                                                    'currentPassword'
+                                                );
+                                            }}
+                                            onBlur={() => {
+                                                setFieldTouched(
+                                                    'currentPassword',
+                                                    ''
+                                                );
+                                            }}
+                                            value={values.currentPassword}
+                                            onChangeText={handleChange(
+                                                'currentPassword'
+                                            )}
+                                            autoCapitalize='none'
+                                            autoCorrect={false}
+                                            style={{ flex: 1 }}
+                                        />
+                                        <TouchableOpacity
+                                            onPress={() =>
+                                                setObsecureText(!obsecureText)
+                                            }
+                                        >
+                                            <MaterialCommunityIcons
+                                                name={
+                                                    obsecureText
+                                                        ? 'eye-off-outline'
+                                                        : 'eye-outline'
+                                                }
+                                                size={20}
+                                                color={COLORS.gray3}
+                                                style={styles.iconStyle}
+                                            />
+                                        </TouchableOpacity>
+                                    </View>
+                                    {touched.currentPassword &&
+                                        errors.currentPassword && (
+                                            <Text style={styles.errorMessage}>
+                                                {errors.currentPassword}
+                                            </Text>
+                                        )}
+                                </View>
+                                <View style={styles.wrapper}>
+                                    <View
+                                        style={styles.inputWrapper(
                                             touched.newPassword
                                                 ? COLORS.primary
                                                 : COLORS.offwhite
@@ -100,7 +223,7 @@ export default function ResetPasswordScreen({ navigation }) {
                                         />
                                         <TextInput
                                             secureTextEntry={obsecureText}
-                                            placeholder='New Password'
+                                            placeholder='Password Baru'
                                             onFocus={() => {
                                                 setFieldTouched('newPassword');
                                             }}
@@ -158,7 +281,7 @@ export default function ResetPasswordScreen({ navigation }) {
                                         />
                                         <TextInput
                                             secureTextEntry={obsecureText}
-                                            placeholder='Konfirmasi Password Baru'
+                                            placeholder='Konfirmasi Password'
                                             onFocus={() => {
                                                 setFieldTouched(
                                                     'confirmNewPassword'
@@ -204,7 +327,7 @@ export default function ResetPasswordScreen({ navigation }) {
                                 </View>
                                 <View style={{ marginTop: -15 }}>
                                     <Button
-                                        title={'R E S E T'}
+                                        title={'U B A H'}
                                         onPress={
                                             isValid ? handleSubmit : inValidForm
                                         }

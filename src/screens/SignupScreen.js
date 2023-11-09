@@ -27,12 +27,32 @@ Yup.addMethod(Yup.string, 'uniqueEmail', function (errorMessage) {
 const validationSchema = Yup.object().shape({
     password: Yup.string()
         .min(8, 'Password terlalu pendek')
-        .required('Password tidak boleh kosong'),
-    username: Yup.string().required('Username tidak boleh kosong'),
-    fullname: Yup.string().required('Nama tidak boleh kosong'),
+        .required('Password tidak boleh kosong')
+        .matches(
+            /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/,
+            'Password harus memiliki setidaknya satu simbol unik'
+        ),
+    confirmPassword: Yup.string()
+        .min(8, 'Password terlalu pendek')
+        .required('Password tidak boleh kosong')
+        .matches(
+            /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/,
+            'Password harus memiliki setidaknya satu simbol unik'
+        )
+        .oneOf([Yup.ref('password'), null], 'Password tidak cocok'),
+    // username: Yup.string()
+    //     .required('Username tidak boleh kosong')
+    //     .matches(
+    //         /^[A-Za-z0-9_.]+$/,
+    //         'Username hanya boleh berisi huruf, angka, titik, dan underscore, spasi tidak diperbolehkan'
+    //     ),
+    // fullname: Yup.string()
+    //     .required('Nama tidak boleh kosong')
+    //     .matches(/^[A-Za-z ]*$/, 'Nama hanya boleh berisi huruf dan spasi'),
     email: Yup.string()
         .email('Email tidak valid')
-        .required('Email tidak boleh kosong'),
+        .required('Email tidak boleh kosong')
+        .matches(/\S+@\S+\.\S+/, 'Email tidak valid'),
     // .uniqueEmail('Email sudah terdaftar'),
 });
 
@@ -67,12 +87,15 @@ export default function SignupScreen({ navigation }) {
                     <Formik
                         initialValues={{
                             email: '',
-                            username: '',
-                            fullname: '',
+                            // username: '',
+                            // fullname: '',
                             password: '',
+                            confirmPassword: '',
                         }}
                         validationSchema={validationSchema}
                         onSubmit={(values) => console.log(values)}
+                        validateOnMount
+                        validateOnChange
                     >
                         {({
                             handleChange,
@@ -84,9 +107,8 @@ export default function SignupScreen({ navigation }) {
                             isValid,
                             setFieldTouched,
                         }) => (
-                            <View>
+                            <View style={{ marginTop: -15 }}>
                                 <View style={styles.wrapper}>
-                                    <Text style={styles.label}>Email</Text>
                                     <View
                                         style={styles.inputWrapper(
                                             touched.email
@@ -121,8 +143,7 @@ export default function SignupScreen({ navigation }) {
                                         </Text>
                                     )}
                                 </View>
-                                <View style={styles.wrapper}>
-                                    <Text style={styles.label}>Username</Text>
+                                {/* <View style={styles.wrapper}>
                                     <View
                                         style={styles.inputWrapper(
                                             touched.username
@@ -158,11 +179,8 @@ export default function SignupScreen({ navigation }) {
                                             {errors.username}
                                         </Text>
                                     )}
-                                </View>
-                                <View style={styles.wrapper}>
-                                    <Text style={styles.label}>
-                                        Nama Lengkap
-                                    </Text>
+                                </View> */}
+                                {/* <View style={styles.wrapper}>
                                     <View
                                         style={styles.inputWrapper(
                                             touched.fullname
@@ -198,9 +216,8 @@ export default function SignupScreen({ navigation }) {
                                             {errors.fullname}
                                         </Text>
                                     )}
-                                </View>
+                                </View> */}
                                 <View style={styles.wrapper}>
-                                    <Text style={styles.label}>Password</Text>
                                     <View
                                         style={styles.inputWrapper(
                                             touched.password
@@ -254,13 +271,75 @@ export default function SignupScreen({ navigation }) {
                                         </Text>
                                     )}
                                 </View>
-                                <Button
-                                    title={'D A F T A R'}
-                                    onPress={
-                                        isValid ? handleSubmit : inValidForm
-                                    }
-                                    isValid={isValid}
-                                />
+                                <View style={styles.wrapper}>
+                                    <View
+                                        style={styles.inputWrapper(
+                                            touched.confirmPassword
+                                                ? COLORS.primary
+                                                : COLORS.offwhite
+                                        )}
+                                    >
+                                        <MaterialCommunityIcons
+                                            name='lock-outline'
+                                            size={20}
+                                            color={COLORS.gray3}
+                                            style={styles.iconStyle}
+                                        />
+                                        <TextInput
+                                            secureTextEntry={obsecureText}
+                                            placeholder='Konfirmasi Password'
+                                            onFocus={() => {
+                                                setFieldTouched(
+                                                    'confirmPassword'
+                                                );
+                                            }}
+                                            onBlur={() => {
+                                                setFieldTouched(
+                                                    'confirmPassword',
+                                                    ''
+                                                );
+                                            }}
+                                            value={values.confirmPassword}
+                                            onChangeText={handleChange(
+                                                'confirmPassword'
+                                            )}
+                                            autoCapitalize='none'
+                                            autoCorrect={false}
+                                            style={{ flex: 1 }}
+                                        />
+                                        <TouchableOpacity
+                                            onPress={() =>
+                                                setObsecureText(!obsecureText)
+                                            }
+                                        >
+                                            <MaterialCommunityIcons
+                                                name={
+                                                    obsecureText
+                                                        ? 'eye-off-outline'
+                                                        : 'eye-outline'
+                                                }
+                                                size={20}
+                                                color={COLORS.gray3}
+                                                style={styles.iconStyle}
+                                            />
+                                        </TouchableOpacity>
+                                    </View>
+                                    {touched.confirmPassword &&
+                                        errors.confirmPassword && (
+                                            <Text style={styles.errorMessage}>
+                                                {errors.confirmPassword}
+                                            </Text>
+                                        )}
+                                </View>
+                                <View style={{ marginTop: -15 }}>
+                                    <Button
+                                        title={'D A F T A R'}
+                                        onPress={
+                                            isValid ? handleSubmit : inValidForm
+                                        }
+                                        isValid={isValid}
+                                    />
+                                </View>
                             </View>
                         )}
                     </Formik>

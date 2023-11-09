@@ -1,19 +1,35 @@
-import { LoginScreen, SignupScreen, ResetPasswordScreen } from '../screens';
+import {
+    LoginScreen,
+    SignupScreen,
+    ResetPasswordScreen,
+    ChangePasswordScreen,
+    ForgotPasswordScreen,
+    VerificationScreen,
+} from '../screens';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 export default function AuthNavigation() {
     const Stack = createNativeStackNavigator();
     return (
         <Stack.Navigator
-            initialRouteName='Login'
+            initialRouteName='Signup'
             screenOptions={{ headerShown: false }}
         >
             <Stack.Screen name='Login' component={LoginScreen} />
             <Stack.Screen name='Signup' component={SignupScreen} />
             <Stack.Screen
+                name='Forgot Password'
+                component={ForgotPasswordScreen}
+            />
+            <Stack.Screen
                 name='Reset Password'
                 component={ResetPasswordScreen}
             />
+            <Stack.Screen
+                name='Change Password'
+                component={ChangePasswordScreen}
+            />
+            <Stack.Screen name='Verification' component={VerificationScreen} />
         </Stack.Navigator>
     );
 }
