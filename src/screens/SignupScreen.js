@@ -15,6 +15,8 @@ import { Formik } from 'formik';
 import * as Yup from 'yup';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS } from '../constants/theme';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 Yup.addMethod(Yup.string, 'uniqueEmail', function (errorMessage) {
     return this.test('uniqueEmail', errorMessage, async function (value) {
@@ -58,8 +60,8 @@ const validationSchema = Yup.object().shape({
 
 export default function SignupScreen({ navigation }) {
     const [loader, setLoader] = useState(false);
-    const [response, setResponse] = useState(null);
-    const [obsecureText, setObsecureText] = useState(false);
+    const [password, setPassword] = useState(false);
+    const [confirmPassword, setConfirmPassword] = useState(false);
 
     const inValidForm = () => {
         Alert.alert(
@@ -68,10 +70,49 @@ export default function SignupScreen({ navigation }) {
             [
                 {
                     text: 'Lanjutkan',
-                    onPress: () => console.log('Lanjutkan Ditekan'),
+                    onPress: () => {},
                 },
             ]
         );
+    };
+
+    const handleSignup = async (values) => {
+        setLoader(true);
+        try {
+            const endpoint =
+                'https://belega-commerce-api-staging-tku2lejm6q-et.a.run.app/api/auth/register';
+            const data = values;
+            const response = await axios.post(endpoint, data);
+            if (response.data.status === 201) {
+                setLoader(false);
+                // const { email, token } = response.data.data;
+                // await AsyncStorage.setItem(
+                //     'userRegister',
+                //     JSON.stringify({ email, token })
+                // );
+                await AsyncStorage.setItem('token', response.data.data.token);
+                Alert.alert('Berhasil', response.data.message, [
+                    {
+                        text: 'lanjutkan',
+                        onPress: () =>
+                            navigation.navigate('Auth', { screen: 'Otp' }),
+                    },
+                ]);
+            } else {
+                setLoader(false);
+                Alert.alert('Error', response.data.message, [
+                    {
+                        text: 'Ok',
+                        onPress: () => {},
+                    },
+                ]);
+            }
+        } catch (e) {
+            setLoader(false);
+            console.log(e);
+        } finally {
+            setLoader(false);
+        }
     };
 
     return (
@@ -93,7 +134,7 @@ export default function SignupScreen({ navigation }) {
                             confirmPassword: '',
                         }}
                         validationSchema={validationSchema}
-                        onSubmit={(values) => console.log(values)}
+                        onSubmit={(values) => handleSignup(values)}
                         validateOnMount
                         validateOnChange
                     >
@@ -232,7 +273,7 @@ export default function SignupScreen({ navigation }) {
                                             style={styles.iconStyle}
                                         />
                                         <TextInput
-                                            secureTextEntry={obsecureText}
+                                            secureTextEntry={password}
                                             placeholder='Password'
                                             onFocus={() => {
                                                 setFieldTouched('password');
@@ -250,12 +291,12 @@ export default function SignupScreen({ navigation }) {
                                         />
                                         <TouchableOpacity
                                             onPress={() =>
-                                                setObsecureText(!obsecureText)
+                                                setPassword(!password)
                                             }
                                         >
                                             <MaterialCommunityIcons
                                                 name={
-                                                    obsecureText
+                                                    password
                                                         ? 'eye-off-outline'
                                                         : 'eye-outline'
                                                 }
@@ -286,7 +327,7 @@ export default function SignupScreen({ navigation }) {
                                             style={styles.iconStyle}
                                         />
                                         <TextInput
-                                            secureTextEntry={obsecureText}
+                                            secureTextEntry={confirmPassword}
                                             placeholder='Konfirmasi Password'
                                             onFocus={() => {
                                                 setFieldTouched(
@@ -309,12 +350,14 @@ export default function SignupScreen({ navigation }) {
                                         />
                                         <TouchableOpacity
                                             onPress={() =>
-                                                setObsecureText(!obsecureText)
+                                                setConfirmPassword(
+                                                    !confirmPassword
+                                                )
                                             }
                                         >
                                             <MaterialCommunityIcons
                                                 name={
-                                                    obsecureText
+                                                    confirmPassword
                                                         ? 'eye-off-outline'
                                                         : 'eye-outline'
                                                 }
@@ -333,6 +376,7 @@ export default function SignupScreen({ navigation }) {
                                 </View>
                                 <View style={{ marginTop: -15 }}>
                                     <Button
+                                        loader={loader}
                                         title={'D A F T A R'}
                                         onPress={
                                             isValid ? handleSubmit : inValidForm

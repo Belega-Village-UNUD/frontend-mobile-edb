@@ -35,7 +35,6 @@ const validationSchema = Yup.object().shape({
 
 export default function LoginScreen({ navigation }) {
     const [loader, setLoader] = useState(false);
-    // const [responseData, setResponseData] = useState(null);
     const [obsecureText, setObsecureText] = useState(false);
 
     const inValidForm = () => {
@@ -45,7 +44,7 @@ export default function LoginScreen({ navigation }) {
             [
                 {
                     text: 'Lanjutkan',
-                    onPress: () => console.log('Lanjutkan Ditekan'),
+                    onPress: () => {},
                 },
             ]
         );
@@ -58,26 +57,29 @@ export default function LoginScreen({ navigation }) {
                 'https://belega-commerce-api-staging-tku2lejm6q-et.a.run.app/api/auth/login';
             const data = values;
             const response = await axios.post(endpoint, data);
-            if (response.data.status === 200) {
+            if (response.data.status == 200) {
                 setLoader(false);
-                //help to get payload email and token
-                const { email, token } = response.data.data;
-                //save to async storage
-                await AsyncStorage.setItem(
-                    'user',
-                    JSON.stringify({ email, token })
-                );
+                // const { email, is_verified } = response.data.data.payload;
+                await AsyncStorage.setItem('token', response.data.data.token);
+                // await AsyncStorage.setItem(
+                //     'userLogin',
+                //     JSON.stringify({ email, token, is_verified })
+                // );
                 navigation.navigate('Bottom Navigation', { screen: 'Home' });
+            } else {
+                setLoader(false);
+                Alert.alert('Error', response.data.message, [
+                    {
+                        text: 'Ok',
+                        onPress: () => {},
+                    },
+                ]);
             }
         } catch (error) {
             {
                 Alert.alert('Error Login', 'Masukkan Kredensial yang Benar', [
                     {
-                        text: 'Batalkan',
-                        onPress: () => {},
-                    },
-                    {
-                        text: 'Lanjutkan',
+                        text: 'Ok',
                         onPress: () => {},
                     },
                 ]);
@@ -86,7 +88,7 @@ export default function LoginScreen({ navigation }) {
             setLoader(false);
         }
     };
-    console.log(loader);
+
     return (
         <ScrollView>
             <SafeAreaView style={{ marginHorizontal: 20 }}>

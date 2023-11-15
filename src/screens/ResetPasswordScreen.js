@@ -15,6 +15,8 @@ import { Formik } from 'formik';
 import * as Yup from 'yup';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS } from '../constants/theme';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const validationSchema = Yup.object().shape({
     newPassword: Yup.string()
@@ -32,12 +34,11 @@ const validationSchema = Yup.object().shape({
             /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/,
             'Password harus memiliki setidaknya satu simbol unik'
         )
-        .oneOf([Yup.ref('password'), null], 'Password tidak cocok'),
+        .oneOf([Yup.ref('newPassword'), null], 'Password tidak cocok'),
 });
 
 export default function ResetPasswordScreen({ navigation }) {
     const [loader, setLoader] = useState(false);
-    const [response, setResponse] = useState(null);
     const [obsecureText, setObsecureText] = useState(false);
 
     const inValidForm = () => {
@@ -47,10 +48,44 @@ export default function ResetPasswordScreen({ navigation }) {
             [
                 {
                     text: 'Lanjutkan',
-                    onPress: () => console.log('Lanjutkan Ditekan'),
+                    onPress: () => {},
                 },
             ]
         );
+    };
+
+    const handleResetPassword = async (values) => {
+        const endpoint =
+            'https://belega-commerce-api-staging-tku2lejm6q-et.a.run.app/api/auth/password/reset';
+        const data = values;
+        const token = await AsyncStorage.getItem('tokenForgot');
+        const response = await axios.put(endpoint, data, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        setLoader(true);
+        try {
+            if (response.data.status === 200) {
+                setLoader(false);
+                Alert.alert(
+                    'Password Berhasil Diubah',
+                    'Password berhasil diubah, silahkan login kembali',
+                    [
+                        {
+                            text: 'Lanjutkan',
+                            onPress: () =>
+                                navigation.navigate('Auth', {
+                                    screen: 'Login',
+                                }),
+                        },
+                    ]
+                );
+            }
+        } catch (e) {
+            console.log(e);
+        }
     };
 
     return (
@@ -69,7 +104,7 @@ export default function ResetPasswordScreen({ navigation }) {
                             confirmNewPassword: '',
                         }}
                         validationSchema={validationSchema}
-                        onSubmit={(values) => console.log(values)}
+                        onSubmit={(values) => handleResetPassword(values)}
                         validateOnMount
                         validateOnChange
                     >
@@ -204,6 +239,7 @@ export default function ResetPasswordScreen({ navigation }) {
                                 </View>
                                 <View style={{ marginTop: -15 }}>
                                     <Button
+                                        loader={loader}
                                         title={'R E S E T'}
                                         onPress={
                                             isValid ? handleSubmit : inValidForm

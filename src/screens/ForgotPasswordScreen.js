@@ -7,6 +7,8 @@ import { Formik } from 'formik';
 import * as Yup from 'yup';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS } from '../constants/theme';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const validationSchema = Yup.object().shape({
     email: Yup.string()
@@ -17,7 +19,6 @@ const validationSchema = Yup.object().shape({
 
 export default function ForgotPasswordScreen({ navigation }) {
     const [loader, setLoader] = useState(false);
-    const [response, setResponse] = useState(null);
 
     const inValidForm = () => {
         Alert.alert(
@@ -26,10 +27,48 @@ export default function ForgotPasswordScreen({ navigation }) {
             [
                 {
                     text: 'Lanjutkan',
-                    onPress: () => console.log('Lanjutkan Ditekan'),
+                    onPress: () => {},
                 },
             ]
         );
+    };
+
+    const handleForgotPassword = async (values) => {
+        setLoader(true);
+        try {
+            const endpoint =
+                'https://belega-commerce-api-staging-tku2lejm6q-et.a.run.app/api/auth/password/forgot';
+            const data = values;
+            const response = await axios.post(endpoint, data);
+            if (response.data.status === 200) {
+                setLoader(false);
+                await AsyncStorage.setItem(
+                    'tokenForgot',
+                    response.data.data.token
+                );
+                Alert.alert(
+                    'OTP Terkirim',
+                    'OTP telah dikirim ulang ke email anda',
+                    [
+                        {
+                            text: 'Lanjutkan',
+                            onPress: () =>
+                                navigation.navigate('Auth', { screen: 'Otp' }),
+                        },
+                    ]
+                );
+            }
+        } catch (error) {
+            setLoader(false);
+            Alert.alert('OTP Gagal Terkirim', 'Akun Tidak Ditemukan', [
+                {
+                    text: 'Ok',
+                    onPress: () => {},
+                },
+            ]);
+        } finally {
+            setLoader(false);
+        }
     };
 
     return (
@@ -47,7 +86,7 @@ export default function ForgotPasswordScreen({ navigation }) {
                             email: '',
                         }}
                         validationSchema={validationSchema}
-                        onSubmit={(values) => console.log(values)}
+                        onSubmit={(values) => handleForgotPassword(values)}
                         validateOnMount
                         validateOnChange
                     >
@@ -99,6 +138,7 @@ export default function ForgotPasswordScreen({ navigation }) {
                                 </View>
                                 <View style={{ marginTop: -15 }}>
                                     <Button
+                                        loader={loader}
                                         title={'C O N F I R M'}
                                         onPress={
                                             isValid ? handleSubmit : inValidForm

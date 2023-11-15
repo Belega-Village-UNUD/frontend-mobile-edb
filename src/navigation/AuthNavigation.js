@@ -4,7 +4,7 @@ import {
     ResetPasswordScreen,
     ChangePasswordScreen,
     ForgotPasswordScreen,
-    VerificationScreen,
+    OtpScreen,
 } from '../screens';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
@@ -29,7 +29,7 @@ export default function AuthNavigation() {
                 name='Change Password'
                 component={ChangePasswordScreen}
             />
-            <Stack.Screen name='Verification' component={VerificationScreen} />
+            <Stack.Screen name='Otp' component={OtpScreen} />
         </Stack.Navigator>
     );
 }

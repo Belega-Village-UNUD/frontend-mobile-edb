@@ -9,7 +9,7 @@ import SignupScreen from './SignupScreen';
 import ResetPasswordScreen from './ResetPasswordScreen';
 import ChangePasswordScreen from './ChangePasswordScreen';
 import ForgotPasswordScreen from './ForgotPasswordScreen';
-import VerificationScreen from './VerificationScreen';
+import OtpScreen from './OtpScreen';
 
 export {
     HomeScreen,
@@ -23,5 +23,5 @@ export {
     ResetPasswordScreen,
     ChangePasswordScreen,
     ForgotPasswordScreen,
-    VerificationScreen,
+    OtpScreen,
 };

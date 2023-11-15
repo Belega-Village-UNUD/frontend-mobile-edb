@@ -66,8 +66,7 @@ export default function ChangePasswordScreen({ navigation }) {
             const endpoint =
                 'https://belega-commerce-api-staging-tku2lejm6q-et.a.run.app/api/auth/password/change';
             const data = values;
-            const user = await AsyncStorage.getItem('user');
-            const { token } = JSON.parse(user);
+            const token = await AsyncStorage.getItem('token');
             const response = await axios.put(endpoint, data, {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -75,7 +74,6 @@ export default function ChangePasswordScreen({ navigation }) {
             });
             if (response.data.status === 200) {
                 setLoader(false);
-                // if (values.newPassword === values.confirmNewPassword) {
                 Alert.alert(
                     'Password Berhasil Diubah',
                     'Password kamu berhasil diubah',
@@ -327,6 +325,7 @@ export default function ChangePasswordScreen({ navigation }) {
                                 </View>
                                 <View style={{ marginTop: -15 }}>
                                     <Button
+                                        loader={loader}
                                         title={'U B A H'}
                                         onPress={
                                             isValid ? handleSubmit : inValidForm

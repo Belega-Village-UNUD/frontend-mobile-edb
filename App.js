@@ -3,7 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { useCallback } from 'react';
-import { CartScreen } from './src/screens';
+import { CartScreen, OtpScreen, VerificationScreen } from './src/screens';
 import BottomTabNavigation from './src/navigation/BottomTabNavigation';
 import SplashNavigation from './src/navigation/SplashNavigation';
 import AuthNavigation from './src/navigation/AuthNavigation';
@@ -33,6 +33,11 @@ export default function App() {
     return (
         <NavigationContainer>
             <Stack.Navigator screenOptions={{ headerShown: false }}>
+                {/* <Stack.Screen name='Otp' component={OtpScreen} /> */}
+                {/* <Stack.Screen
+                    name='Verification'
+                    component={VerificationScreen}
+                /> */}
                 <Stack.Screen name='Splash' component={SplashNavigation} />
                 <Stack.Screen
                     name='Bottom Navigation'

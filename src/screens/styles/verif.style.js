@@ -19,7 +19,7 @@ const styles = StyleSheet.create({
         paddingTop: SIZES.height * -5,
     },
     bottomHalf: {
-        height: SIZES.height * 0.5,
+        height: '50%',
     },
     // help me to create ideal styling for screen Verification such as for Page Title and Page Description
     pageTitle: {
@@ -36,7 +36,37 @@ const styles = StyleSheet.create({
         marginTop: SIZES.medium * 0.5,
     },
     verifBtn: {
-        marginTop: SIZES.xxLarge * 2,
+        marginTop: SIZES.medium * 3,
+    },
+
+    wrapper: {
+        marginBottom: 20,
+        // marginHorizontal: 20,
+    },
+    inputWrapper: (borderColor) => ({
+        borderColor: borderColor,
+        backgroundColor: COLORS.lightWhite,
+        borderWidth: 1,
+        height: 55,
+        borderRadius: 12,
+        flexDirection: 'row',
+        paddingHorizontal: 15,
+        alignItems: 'center',
+        marginTop: 15,
+    }),
+    iconStyle: {
+        marginRight: 10,
+    },
+    errorMessage: {
+        color: COLORS.red,
+        fontFamily: 'regular',
+        marginTop: 5,
+        marginLeft: 5,
+        fontSize: SIZES.xSmall,
+    },
+    resendOtp: {
+        marginTop: 25,
+        textAlign: 'center',
     },
 });
 

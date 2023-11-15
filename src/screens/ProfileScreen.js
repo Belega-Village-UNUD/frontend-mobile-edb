@@ -18,6 +18,7 @@ import {
 import { COLORS } from '../constants/theme';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 export default function ProfileScreen({ navigation }) {
     const [userData, setUserData] = useState(null);
@@ -25,58 +26,119 @@ export default function ProfileScreen({ navigation }) {
 
     const handleCheckUserLogin = async () => {
         try {
-            const user = await AsyncStorage.getItem('user');
-            const { email } = JSON.parse(user);
-            if (email !== null) {
-                setUserData({ email });
+            const endpoint =
+                'https://belega-commerce-api-staging-tku2lejm6q-et.a.run.app/api/profiles';
+            let token = await AsyncStorage.getItem('token');
+            // console.log('token', token);
+            const response = await axios.get(endpoint, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            const { email, is_verified } = response.data.data.user;
+            if (response.data.status === 200) {
+                setUserData({ email, is_verified });
                 setUserLogin(true);
             } else {
                 setUserLogin(false);
             }
-        } catch (e) {}
+        } catch (e) {
+            console.log(e);
+        }
     };
 
-    // useEffect(() => {
-    //     handleCheckUserLogin();
-    // }, []);
-    useFocusEffect(
-        React.useCallback(() => {
-            handleCheckUserLogin();
-        }, [])
-    );
+    const handleOptionClick = (option) => {
+        if (
+            !userData.is_verified &&
+            option !== 'logout' &&
+            option !== 'resendOtp'
+        ) {
+            Alert.alert(
+                'Verifikasi Akun',
+                'Akun anda belum terverifikasi, silahkan verifikasi akun anda terlebih dahulu.'
+            );
+        } else {
+            switch (option) {
+                case 'favorite':
+                    navigation.navigate('Favorite');
+                    break;
+                case 'order':
+                    navigation.navigate('Order');
+                    break;
+                case 'cart':
+                    navigation.navigate('Cart');
+                    break;
+                case 'changePassword':
+                    navigation.navigate('Auth', { screen: 'Change Password' });
+                    break;
+                case 'logout':
+                    handleLogout();
+                    break;
+                case 'resendOtp':
+                    handleResendAndNavigate();
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
 
     const handleLogout = () => {
         Alert.alert('Logout', 'Apakah anda yakin ingin keluar?', [
             {
                 text: 'Batal',
-                onPress: () => console.log('Batal Logout'),
+                onPress: () => {},
             },
             {
                 text: 'Ya',
-                onPress: () => {
-                    AsyncStorage.removeItem('user');
+                onPress: async () => {
+                    await AsyncStorage.removeItem('token');
                     setUserLogin(false);
-                    console.log('Logout');
                 },
             },
         ]);
     };
 
-    const deleteAccount = () => {
-        Alert.alert('Hapus Akun', 'Apakah anda yakin ingin menghapus akun?', [
-            {
-                text: 'Batal',
-                onPress: () => console.log('Batal ditekan'),
-            },
-            {
-                text: 'Hapus',
-                onPress: () => {
-                    setUserLogin(false);
-                    console.log('Hapus ditekan');
+    const handleResendAndNavigate = async () => {
+        try {
+            const token = await AsyncStorage.getItem('token');
+            const endpoint =
+                'https://belega-commerce-api-staging-tku2lejm6q-et.a.run.app/api/auth/otp';
+            const data = {
+                token: token,
+            };
+            // console.log(token);
+            const response = await axios.post(endpoint, data, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
                 },
-            },
-        ]);
+            });
+            if (response.data.status === 200) {
+                Alert.alert(
+                    'OTP Terkirim Ulang',
+                    'OTP telah dikirim ulang ke email anda',
+                    [
+                        {
+                            text: 'Ok',
+                            onPress: () => {
+                                navigation.navigate('Auth', { screen: 'Otp' });
+                            },
+                        },
+                    ]
+                );
+            } else {
+                Alert.alert('OTP Resent Failed', response.data.message);
+            }
+        } catch (e) {
+            console.log(e);
+        }
     };
+
+    useFocusEffect(
+        React.useCallback(() => {
+            handleCheckUserLogin();
+        }, [])
+    );
 
     return (
         <View style={styles.container}>
@@ -111,14 +173,14 @@ export default function ProfileScreen({ navigation }) {
                             </View>
                         </TouchableOpacity>
                     ) : (
-                        <TouchableOpacity>
-                            <View style={styles.loginBtn}>
-                                <Text style={styles.menuText}>
-                                    {userData.email}
-                                    {'        '}
-                                </Text>
-                            </View>
-                        </TouchableOpacity>
+                        <View style={styles.loginBtn}>
+                            <Text style={styles.menuText}>
+                                {userData.is_verified
+                                    ? userData.email
+                                    : 'U N V E R I F I E D'}
+                                {'        '}
+                            </Text>
+                        </View>
                     )}
                     <ScrollView
                         style={{ flex: 1, marginBottom: 85 }}
@@ -128,7 +190,29 @@ export default function ProfileScreen({ navigation }) {
                             <View></View>
                         ) : (
                             <View style={styles.menuWrapper}>
-                                <TouchableOpacity onPress={() => {}}>
+                                {!userData.is_verified && (
+                                    <TouchableOpacity
+                                        onPress={() =>
+                                            handleOptionClick('resendOtp')
+                                        }
+                                    >
+                                        <View style={styles.menuItem(0.2)}>
+                                            <AntDesign
+                                                name='reload1'
+                                                size={24}
+                                                color={COLORS.primary}
+                                            />
+                                            <Text style={styles.menuText}>
+                                                Resend OTP
+                                            </Text>
+                                        </View>
+                                    </TouchableOpacity>
+                                )}
+                                <TouchableOpacity
+                                    onPress={() =>
+                                        handleOptionClick('favorite')
+                                    }
+                                >
                                     <View style={styles.menuItem(0.2)}>
                                         <MaterialCommunityIcons
                                             name='heart-outline'
@@ -140,7 +224,9 @@ export default function ProfileScreen({ navigation }) {
                                         </Text>
                                     </View>
                                 </TouchableOpacity>
-                                <TouchableOpacity onPress={() => {}}>
+                                <TouchableOpacity
+                                    onPress={() => handleOptionClick('order')}
+                                >
                                     <View style={styles.menuItem(0.2)}>
                                         <MaterialCommunityIcons
                                             name='truck-delivery-outline'
@@ -153,9 +239,7 @@ export default function ProfileScreen({ navigation }) {
                                     </View>
                                 </TouchableOpacity>
                                 <TouchableOpacity
-                                    onPress={() => {
-                                        navigation.navigate('Cart');
-                                    }}
+                                    onPress={() => handleOptionClick('cart')}
                                 >
                                     <View style={styles.menuItem(0.2)}>
                                         <SimpleLineIcons
@@ -169,11 +253,9 @@ export default function ProfileScreen({ navigation }) {
                                     </View>
                                 </TouchableOpacity>
                                 <TouchableOpacity
-                                    onPress={() =>
-                                        navigation.navigate('Auth', {
-                                            screen: 'Change Password',
-                                        })
-                                    }
+                                    onPress={() => {
+                                        handleOptionClick('changePassword');
+                                    }}
                                 >
                                     <View style={styles.menuItem(0.2)}>
                                         <Ionicons
@@ -187,7 +269,7 @@ export default function ProfileScreen({ navigation }) {
                                     </View>
                                 </TouchableOpacity>
                                 <TouchableOpacity
-                                    onPress={() => handleLogout()}
+                                    onPress={() => handleOptionClick('logout')}
                                 >
                                     <View style={styles.menuItem(0.2)}>
                                         <AntDesign
@@ -197,20 +279,6 @@ export default function ProfileScreen({ navigation }) {
                                         />
                                         <Text style={styles.menuText}>
                                             Keluar
-                                        </Text>
-                                    </View>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    onPress={() => deleteAccount()}
-                                >
-                                    <View style={styles.menuItem(0.2)}>
-                                        <AntDesign
-                                            name='deleteuser'
-                                            size={24}
-                                            color={COLORS.primary}
-                                        />
-                                        <Text style={styles.menuText}>
-                                            Hapus Akun
                                         </Text>
                                     </View>
                                 </TouchableOpacity>
