@@ -18,14 +18,6 @@ import { COLORS } from '../constants/theme';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-Yup.addMethod(Yup.string, 'uniqueEmail', function (errorMessage) {
-    return this.test('uniqueEmail', errorMessage, async function (value) {
-        const { path, createError } = this;
-        // const isUnique = await checkEmailUnique(value); // replace this with your API call
-        // return isUnique || createError({ path, message: errorMessage });
-    });
-});
-
 const validationSchema = Yup.object().shape({
     password: Yup.string()
         .min(8, 'Password terlalu pendek')
@@ -42,20 +34,10 @@ const validationSchema = Yup.object().shape({
             'Password harus memiliki setidaknya satu simbol unik'
         )
         .oneOf([Yup.ref('password'), null], 'Password tidak cocok'),
-    // username: Yup.string()
-    //     .required('Username tidak boleh kosong')
-    //     .matches(
-    //         /^[A-Za-z0-9_.]+$/,
-    //         'Username hanya boleh berisi huruf, angka, titik, dan underscore, spasi tidak diperbolehkan'
-    //     ),
-    // fullname: Yup.string()
-    //     .required('Nama tidak boleh kosong')
-    //     .matches(/^[A-Za-z ]*$/, 'Nama hanya boleh berisi huruf dan spasi'),
     email: Yup.string()
         .email('Email tidak valid')
         .required('Email tidak boleh kosong')
         .matches(/\S+@\S+\.\S+/, 'Email tidak valid'),
-    // .uniqueEmail('Email sudah terdaftar'),
 });
 
 export default function SignupScreen({ navigation }) {
@@ -85,11 +67,6 @@ export default function SignupScreen({ navigation }) {
             const response = await axios.post(endpoint, data);
             if (response.data.status === 201) {
                 setLoader(false);
-                // const { email, token } = response.data.data;
-                // await AsyncStorage.setItem(
-                //     'userRegister',
-                //     JSON.stringify({ email, token })
-                // );
                 await AsyncStorage.setItem('token', response.data.data.token);
                 Alert.alert('Berhasil', response.data.message, [
                     {
@@ -99,7 +76,6 @@ export default function SignupScreen({ navigation }) {
                     },
                 ]);
             } else {
-                setLoader(false);
                 Alert.alert('Error', response.data.message, [
                     {
                         text: 'Ok',
@@ -109,7 +85,16 @@ export default function SignupScreen({ navigation }) {
             }
         } catch (e) {
             setLoader(false);
-            console.log(e);
+            if (e.response && e.response.status === 400) {
+                Alert.alert('Error', e.response.data.message, [
+                    {
+                        text: 'Ok',
+                        onPress: () => {},
+                    },
+                ]);
+            } else {
+                console.log(e);
+            }
         } finally {
             setLoader(false);
         }
@@ -128,8 +113,6 @@ export default function SignupScreen({ navigation }) {
                     <Formik
                         initialValues={{
                             email: '',
-                            // username: '',
-                            // fullname: '',
                             password: '',
                             confirmPassword: '',
                         }}
@@ -184,80 +167,6 @@ export default function SignupScreen({ navigation }) {
                                         </Text>
                                     )}
                                 </View>
-                                {/* <View style={styles.wrapper}>
-                                    <View
-                                        style={styles.inputWrapper(
-                                            touched.username
-                                                ? COLORS.primary
-                                                : COLORS.offwhite
-                                        )}
-                                    >
-                                        <MaterialCommunityIcons
-                                            name='account-box-outline'
-                                            size={20}
-                                            color={COLORS.gray3}
-                                            style={styles.iconStyle}
-                                        />
-                                        <TextInput
-                                            placeholder='Nama Pengguna'
-                                            onFocus={() => {
-                                                setFieldTouched('username');
-                                            }}
-                                            onBlur={() => {
-                                                setFieldTouched('username', '');
-                                            }}
-                                            value={values.username}
-                                            onChangeText={handleChange(
-                                                'username'
-                                            )}
-                                            autoCapitalize='none'
-                                            autoCorrect={false}
-                                            style={{ flex: 1 }}
-                                        />
-                                    </View>
-                                    {touched.username && errors.username && (
-                                        <Text style={styles.errorMessage}>
-                                            {errors.username}
-                                        </Text>
-                                    )}
-                                </View> */}
-                                {/* <View style={styles.wrapper}>
-                                    <View
-                                        style={styles.inputWrapper(
-                                            touched.fullname
-                                                ? COLORS.primary
-                                                : COLORS.offwhite
-                                        )}
-                                    >
-                                        <MaterialCommunityIcons
-                                            name='account-outline'
-                                            size={20}
-                                            color={COLORS.gray3}
-                                            style={styles.iconStyle}
-                                        />
-                                        <TextInput
-                                            placeholder='Nama Lengkap'
-                                            onFocus={() => {
-                                                setFieldTouched('fullname');
-                                            }}
-                                            onBlur={() => {
-                                                setFieldTouched('fullname', '');
-                                            }}
-                                            value={values.fullname}
-                                            onChangeText={handleChange(
-                                                'fullname'
-                                            )}
-                                            autoCapitalize='none'
-                                            autoCorrect={false}
-                                            style={{ flex: 1 }}
-                                        />
-                                    </View>
-                                    {touched.fullname && errors.fullname && (
-                                        <Text style={styles.errorMessage}>
-                                            {errors.fullname}
-                                        </Text>
-                                    )}
-                                </View> */}
                                 <View style={styles.wrapper}>
                                     <View
                                         style={styles.inputWrapper(

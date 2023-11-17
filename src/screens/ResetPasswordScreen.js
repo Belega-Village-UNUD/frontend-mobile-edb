@@ -39,7 +39,8 @@ const validationSchema = Yup.object().shape({
 
 export default function ResetPasswordScreen({ navigation }) {
     const [loader, setLoader] = useState(false);
-    const [obsecureText, setObsecureText] = useState(false);
+    const [newPassword, setNewPassword] = useState(false);
+    const [confirmNewPassword, setNewConfirmPassword] = useState(false);
 
     const inValidForm = () => {
         Alert.alert(
@@ -76,9 +77,13 @@ export default function ResetPasswordScreen({ navigation }) {
                         {
                             text: 'Lanjutkan',
                             onPress: () =>
-                                navigation.navigate('Auth', {
-                                    screen: 'Login',
-                                }),
+                                navigation.navigate(
+                                    'Auth',
+                                    {
+                                        screen: 'Login',
+                                    },
+                                    AsyncStorage.removeItem('tokenForgot')
+                                ),
                         },
                     ]
                 );
@@ -134,7 +139,7 @@ export default function ResetPasswordScreen({ navigation }) {
                                             style={styles.iconStyle}
                                         />
                                         <TextInput
-                                            secureTextEntry={obsecureText}
+                                            secureTextEntry={newPassword}
                                             placeholder='New Password'
                                             onFocus={() => {
                                                 setFieldTouched('newPassword');
@@ -155,12 +160,12 @@ export default function ResetPasswordScreen({ navigation }) {
                                         />
                                         <TouchableOpacity
                                             onPress={() =>
-                                                setObsecureText(!obsecureText)
+                                                setNewPassword(!newPassword)
                                             }
                                         >
                                             <MaterialCommunityIcons
                                                 name={
-                                                    obsecureText
+                                                    newPassword
                                                         ? 'eye-off-outline'
                                                         : 'eye-outline'
                                                 }
@@ -192,7 +197,7 @@ export default function ResetPasswordScreen({ navigation }) {
                                             style={styles.iconStyle}
                                         />
                                         <TextInput
-                                            secureTextEntry={obsecureText}
+                                            secureTextEntry={confirmNewPassword}
                                             placeholder='Konfirmasi Password Baru'
                                             onFocus={() => {
                                                 setFieldTouched(
@@ -215,12 +220,14 @@ export default function ResetPasswordScreen({ navigation }) {
                                         />
                                         <TouchableOpacity
                                             onPress={() =>
-                                                setObsecureText(!obsecureText)
+                                                setNewConfirmPassword(
+                                                    !confirmNewPassword
+                                                )
                                             }
                                         >
                                             <MaterialCommunityIcons
                                                 name={
-                                                    obsecureText
+                                                    confirmNewPassword
                                                         ? 'eye-off-outline'
                                                         : 'eye-outline'
                                                 }

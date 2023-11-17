@@ -30,29 +30,36 @@ export default function OtpScreen({ navigation }) {
     const [loader, setLoader] = useState(false);
     const [startTime, setStartTime] = useState(moment());
     const [values, setValues] = useState({ otp: '' });
-    const resendTimeout = useRef(null);
+    const [resendTimeout, setResendTimeout] = useState(60);
+    const countdownInterval = useRef(null);
 
     useFocusEffect(
         React.useCallback(() => {
-            resendTimeout.current = setInterval(() => {
-                if (moment().diff(startTime, 'minutes') >= 3) {
-                    handleResendOtp();
-                    Alert.alert(
-                        'Tolong isi form OTP ini',
-                        'Kode OTP telah dikirim ulang karena form tidak diisi dalam 3 menit'
-                    );
-                }
-            }, 180000);
+            countdownInterval.current = setInterval(() => {
+                setResendTimeout((prevTimeout) => {
+                    if (prevTimeout <= 1) {
+                        clearInterval(countdownInterval.current);
+                        handleResendOtp();
+                        Alert.alert(
+                            'Tolong isi form OTP ini',
+                            'Kode OTP telah dikirim ulang karena form tidak diisi dalam 3 menit'
+                        );
+                        return 60;
+                    } else {
+                        return prevTimeout - 1;
+                    }
+                });
+            }, 1000);
 
             return () => {
-                clearInterval(resendTimeout.current);
+                clearInterval(countdownInterval.current);
             };
-        }, [startTime, handleResendOtp])
+        }, [])
     );
+
     useFocusEffect(
         React.useCallback(() => {
             setStartTime(moment()); // Reset the start time when the form values change
-
             return () => {};
         }, [values])
     );
@@ -75,6 +82,13 @@ export default function OtpScreen({ navigation }) {
     };
 
     const handleResendOtp = async () => {
+        if (resendTimeout < 60) {
+            Alert.alert(
+                'Tunggu sebentar',
+                `Anda dapat mengirim ulang OTP dalam ${resendTimeout} detik`
+            );
+            return;
+        }
         try {
             const endpoint =
                 'https://belega-commerce-api-staging-tku2lejm6q-et.a.run.app/api/auth/otp'; // Replace with your API endpoint
@@ -101,6 +115,17 @@ export default function OtpScreen({ navigation }) {
                     ]
                 );
             }
+            setResendTimeout(60);
+            countdownInterval.current = setInterval(() => {
+                setResendTimeout((prevTimeout) => {
+                    if (prevTimeout <= 1) {
+                        clearInterval(countdownInterval.current);
+                        return 60;
+                    } else {
+                        return prevTimeout - 1;
+                    }
+                });
+            }, 1000);
         } catch (e) {
             console.log(e);
         }
@@ -259,7 +284,9 @@ export default function OtpScreen({ navigation }) {
                                             textDecorationLine: 'underline',
                                         }}
                                     >
-                                        Resend
+                                        {resendTimeout < 60
+                                            ? `Resend in ${resendTimeout} seconds`
+                                            : 'Resend'}
                                     </Text>
                                 </Text>
                             </View>

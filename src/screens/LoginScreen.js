@@ -59,12 +59,7 @@ export default function LoginScreen({ navigation }) {
             const response = await axios.post(endpoint, data);
             if (response.data.status == 200) {
                 setLoader(false);
-                // const { email, is_verified } = response.data.data.payload;
                 await AsyncStorage.setItem('token', response.data.data.token);
-                // await AsyncStorage.setItem(
-                //     'userLogin',
-                //     JSON.stringify({ email, token, is_verified })
-                // );
                 navigation.navigate('Bottom Navigation', { screen: 'Home' });
             } else {
                 setLoader(false);
@@ -221,13 +216,23 @@ export default function LoginScreen({ navigation }) {
                                             flexDirection: 'row',
                                         }}
                                     >
-                                        <Text
-                                            style={styles.registration}
-                                            onPress={() =>
-                                                navigation.navigate('Signup')
-                                            }
-                                        >
-                                            Belum punya akun? Daftar
+                                        <Text style={styles.registration}>
+                                            Belum punya akun?{' '}
+                                            <Text
+                                                onPress={() =>
+                                                    navigation.navigate(
+                                                        'Auth',
+                                                        { screen: 'Signup' }
+                                                    )
+                                                }
+                                                style={{
+                                                    color: COLORS.primary,
+                                                    textDecorationLine:
+                                                        'underline',
+                                                }}
+                                            >
+                                                Daftar
+                                            </Text>
                                             {'                  '}
                                         </Text>
                                         <Text

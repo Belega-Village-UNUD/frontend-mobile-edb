@@ -53,6 +53,8 @@ const styles = StyleSheet.create({
     forgotPassword: {
         marginTop: 20,
         textAlign: 'right',
+        textDecorationLine: 'underline',
+        color: COLORS.primary,
     },
 });
 

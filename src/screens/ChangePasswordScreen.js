@@ -45,7 +45,9 @@ const validationSchema = Yup.object().shape({
 
 export default function ChangePasswordScreen({ navigation }) {
     const [loader, setLoader] = useState(false);
-    const [obsecureText, setObsecureText] = useState(false);
+    const [currentPassword, setCurrentPassword] = useState(false);
+    const [newPassword, setNewPassword] = useState(false);
+    const [confirmNewPassword, setConfirmNewPassword] = useState(false);
 
     const inValidForm = () => {
         Alert.alert(
@@ -160,7 +162,7 @@ export default function ChangePasswordScreen({ navigation }) {
                                             style={styles.iconStyle}
                                         />
                                         <TextInput
-                                            secureTextEntry={obsecureText}
+                                            secureTextEntry={currentPassword}
                                             placeholder='Password Lama'
                                             onFocus={() => {
                                                 setFieldTouched(
@@ -183,12 +185,14 @@ export default function ChangePasswordScreen({ navigation }) {
                                         />
                                         <TouchableOpacity
                                             onPress={() =>
-                                                setObsecureText(!obsecureText)
+                                                setCurrentPassword(
+                                                    !currentPassword
+                                                )
                                             }
                                         >
                                             <MaterialCommunityIcons
                                                 name={
-                                                    obsecureText
+                                                    currentPassword
                                                         ? 'eye-off-outline'
                                                         : 'eye-outline'
                                                 }
@@ -220,7 +224,7 @@ export default function ChangePasswordScreen({ navigation }) {
                                             style={styles.iconStyle}
                                         />
                                         <TextInput
-                                            secureTextEntry={obsecureText}
+                                            secureTextEntry={newPassword}
                                             placeholder='Password Baru'
                                             onFocus={() => {
                                                 setFieldTouched('newPassword');
@@ -241,12 +245,12 @@ export default function ChangePasswordScreen({ navigation }) {
                                         />
                                         <TouchableOpacity
                                             onPress={() =>
-                                                setObsecureText(!obsecureText)
+                                                setNewPassword(!newPassword)
                                             }
                                         >
                                             <MaterialCommunityIcons
                                                 name={
-                                                    obsecureText
+                                                    newPassword
                                                         ? 'eye-off-outline'
                                                         : 'eye-outline'
                                                 }
@@ -278,7 +282,7 @@ export default function ChangePasswordScreen({ navigation }) {
                                             style={styles.iconStyle}
                                         />
                                         <TextInput
-                                            secureTextEntry={obsecureText}
+                                            secureTextEntry={confirmNewPassword}
                                             placeholder='Konfirmasi Password'
                                             onFocus={() => {
                                                 setFieldTouched(
@@ -301,12 +305,14 @@ export default function ChangePasswordScreen({ navigation }) {
                                         />
                                         <TouchableOpacity
                                             onPress={() =>
-                                                setObsecureText(!obsecureText)
+                                                setConfirmNewPassword(
+                                                    !confirmNewPassword
+                                                )
                                             }
                                         >
                                             <MaterialCommunityIcons
                                                 name={
-                                                    obsecureText
+                                                    confirmNewPassword
                                                         ? 'eye-off-outline'
                                                         : 'eye-outline'
                                                 }
