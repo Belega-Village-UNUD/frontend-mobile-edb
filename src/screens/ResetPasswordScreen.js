@@ -140,7 +140,7 @@ export default function ResetPasswordScreen({ navigation }) {
                                         />
                                         <TextInput
                                             secureTextEntry={newPassword}
-                                            placeholder='New Password'
+                                            placeholder='Password Baru'
                                             onFocus={() => {
                                                 setFieldTouched('newPassword');
                                             }}
