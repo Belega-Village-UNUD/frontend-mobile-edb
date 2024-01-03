@@ -1,22 +1,23 @@
+import { BASE_URI } from '@env';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import { Formik } from 'formik';
 import { useState } from 'react';
 import {
-    ScrollView,
-    View,
     Alert,
     Image,
+    ScrollView,
     Text,
     TextInput,
     TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { BackBtn, Button } from '../components';
-import styles from './styles/login.style';
-import { Formik } from 'formik';
 import * as Yup from 'yup';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { BackBtn, Button } from '../components';
 import { COLORS } from '../constants/theme';
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import styles from './styles/login.style';
 
 const validationSchema = Yup.object().shape({
     password: Yup.string()
@@ -40,6 +41,8 @@ const validationSchema = Yup.object().shape({
         .matches(/\S+@\S+\.\S+/, 'Email tidak valid'),
 });
 
+const REGISTER_URI = BASE_URI + '/api/auth/register';
+
 export default function SignupScreen({ navigation }) {
     const [loader, setLoader] = useState(false);
     const [password, setPassword] = useState(false);
@@ -61,10 +64,8 @@ export default function SignupScreen({ navigation }) {
     const handleSignup = async (values) => {
         setLoader(true);
         try {
-            const endpoint =
-                'https://belega-commerce-api-staging-tku2lejm6q-et.a.run.app/api/auth/register';
             const data = values;
-            const response = await axios.post(endpoint, data);
+            const response = await axios.post(REGISTER_URI, data);
             if (response.data.status === 201) {
                 setLoader(false);
                 await AsyncStorage.setItem('token', response.data.data.token);

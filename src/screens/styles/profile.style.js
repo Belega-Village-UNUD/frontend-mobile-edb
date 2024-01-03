@@ -57,6 +57,14 @@ const styles = StyleSheet.create({
         borderColor: COLORS.gray3,
         flexDirection: 'row',
     }),
+    cameraIcon: {
+        position: 'absolute',
+        bottom: 10,
+        right: 10,
+        backgroundColor: 'rgba(255, 255, 255, 0.6)',
+        borderRadius: 12,
+        padding: 5,
+    },
 });
 
 export default styles;
