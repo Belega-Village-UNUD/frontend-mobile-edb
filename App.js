@@ -5,6 +5,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useCallback } from "react";
 import AuthNavigation from "./src/navigation/AuthNavigation";
 import BottomTabNavigation from "./src/navigation/BottomTabNavigation";
+import ProfileNavigation from "./src/navigation/ProfileNavigation";
 import SplashNavigation from "./src/navigation/SplashNavigation";
 import { CartScreen } from "./src/screens";
 
@@ -40,6 +41,7 @@ export default function App() {
         />
         <Stack.Screen name="Cart" component={CartScreen} />
         <Stack.Screen name="Auth" component={AuthNavigation} />
+        <Stack.Screen name="Edit" component={ProfileNavigation} />
       </Stack.Navigator>
     </NavigationContainer>
   );
