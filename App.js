@@ -8,6 +8,7 @@ import BottomTabNavigation from "./src/navigation/BottomTabNavigation";
 import ProfileNavigation from "./src/navigation/ProfileNavigation";
 import SplashNavigation from "./src/navigation/SplashNavigation";
 import { CartScreen } from "./src/screens";
+import ProductDetailsScreen from "./src/screens/ProductDetailsScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -42,6 +43,7 @@ export default function App() {
         <Stack.Screen name="Cart" component={CartScreen} />
         <Stack.Screen name="Auth" component={AuthNavigation} />
         <Stack.Screen name="Edit" component={ProfileNavigation} />
+        <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
