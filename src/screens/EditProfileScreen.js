@@ -6,7 +6,7 @@ import axios from "axios";
 import { StatusBar } from "expo-status-bar";
 import { Formik } from "formik";
 import React, { useState } from "react";
-import { Image, ScrollView, Text, TextInput, View } from "react-native";
+import { Alert, Image, ScrollView, Text, TextInput, View } from "react-native";
 import * as Yup from "yup";
 import { Button } from "../components";
 import { COLORS } from "../constants/theme";
@@ -74,9 +74,9 @@ export default function EditProfileScreen({ navigation }) {
     let token = await AsyncStorage.getItem("token");
     try {
       const data = {
-        name: values.userName,
-        phone: values.userPhone,
-        address: values.userAddress,
+        name: values.userName || userName,
+        phone: values.userPhone || userPhone,
+        address: values.userAddress || userAddress,
       };
       const response = await axios({
         method: "put",
