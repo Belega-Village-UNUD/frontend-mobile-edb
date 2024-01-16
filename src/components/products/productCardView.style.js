@@ -5,6 +5,7 @@ const styles = StyleSheet.create({
   container: {
     width: 170,
     height: 240,
+    padding: 8,
     marginEnd: 12,
     borderRadius: SIZES.medium,
     backgroundColor: COLORS.secondary,
@@ -13,7 +14,7 @@ const styles = StyleSheet.create({
   imageContainer: {
     flex: 1,
     borderRadius: SIZES.medium,
-    width: 160,
+    width: 140,
     marginLeft: SIZES.small / 2,
     marginTop: SIZES.small / 2,
     overflow: "hidden",
