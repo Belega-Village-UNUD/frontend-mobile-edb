@@ -1,3 +1,5 @@
+import ProductScreen from "./ProductScreen";
+import ProductDetailsScreen from "./ProductDetailsScreen";
 import CartScreen from "./CartScreen";
 import ChangePasswordScreen from "./ChangePasswordScreen";
 import EditProfileScreen from "./EditProfileScreen";
@@ -21,9 +23,11 @@ export {
   LoginScreen,
   OnboardingScreen,
   OpeningScreen,
+  ProductScreen,
   OtpScreen,
   ProfileScreen,
   ResetPasswordScreen,
   SearchScreen,
   SignupScreen,
+  ProductDetailsScreen,
 };

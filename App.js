@@ -7,8 +7,7 @@ import AuthNavigation from "./src/navigation/AuthNavigation";
 import BottomTabNavigation from "./src/navigation/BottomTabNavigation";
 import ProfileNavigation from "./src/navigation/ProfileNavigation";
 import SplashNavigation from "./src/navigation/SplashNavigation";
-import { CartScreen } from "./src/screens";
-import ProductDetailsScreen from "./src/screens/ProductDetailsScreen";
+import { CartScreen, ProductDetailsScreen, ProductScreen } from "./src/screens";
 
 const Stack = createNativeStackNavigator();
 
@@ -44,6 +43,7 @@ export default function App() {
         <Stack.Screen name="Auth" component={AuthNavigation} />
         <Stack.Screen name="Edit" component={ProfileNavigation} />
         <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} />
+        <Stack.Screen name="ProductList" component={ProductScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

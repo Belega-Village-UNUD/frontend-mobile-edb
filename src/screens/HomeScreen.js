@@ -6,7 +6,7 @@ import Heading from "../components/home/Heading";
 import ProductRow from "../components/products/ProductRow";
 import styles from "./styles/home.style";
 
-export default function HomeScreen({ navigation }) {
+export default function HomeScreen() {
   return (
     <SafeAreaView>
       <View style={styles.container}>
