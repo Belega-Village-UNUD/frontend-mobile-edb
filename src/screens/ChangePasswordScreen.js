@@ -59,7 +59,6 @@ export default function ChangePasswordScreen({ navigation }) {
       [
         {
           text: "Lanjutkan",
-          onPress: () => console.log("Lanjutkan Ditekan"),
         },
       ]
     );
@@ -68,8 +67,6 @@ export default function ChangePasswordScreen({ navigation }) {
   const handleChangePassword = async (values) => {
     setLoader(true);
     try {
-      // const endpoint =
-      //     'https://belega-commerce-api-staging-tku2lejm6q-et.a.run.app/api/auth/password/change';
       const data = values;
       const token = await AsyncStorage.getItem("token");
       const response = await axios.put(CHANGE_PASSWORD_URI, data, {
@@ -77,6 +74,7 @@ export default function ChangePasswordScreen({ navigation }) {
           Authorization: `Bearer ${token}`,
         },
       });
+
       if (response.data.status === 200) {
         setLoader(false);
         Alert.alert(
@@ -93,17 +91,15 @@ export default function ChangePasswordScreen({ navigation }) {
           ]
         );
       } else {
-        setLoader(false);
-        Alert.alert("Password Gagal Diubah", "Password kamu gagal diubah", [
-          {
-            text: "Kembali",
-            onPress: () => {},
-          },
-        ]);
+        throw new Error(response.data.data.message);
       }
     } catch (e) {
       setLoader(false);
-      Alert.alert("Error", e, [
+      let errorMessage = e.message;
+      if (errorMessage === "Request failed with status code 400") {
+        errorMessage = "Password lama anda salah";
+      }
+      Alert.alert("Error", errorMessage, [
         {
           text: "Kembali",
           onPress: () => {},
