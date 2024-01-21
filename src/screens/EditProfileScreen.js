@@ -16,7 +16,10 @@ const PROFILE_URI = BASE_URI + "/api/profiles";
 const DEFAULT_AVATAR = require("../assets/images/userDefault.png");
 
 const validationSchema = Yup.object().shape({
-  userName: Yup.string().matches(/[a-zA-Z]/, "Nama hanya boleh berisi huruf"),
+  userName: Yup.string().matches(
+    /^[a-zA-Z\s]*$/,
+    "Nama hanya boleh berisi huruf dan spasi"
+  ),
   userPhone: Yup.string().matches(
     /^\+62[0-9]*/,
     "Nomor harus diawali dengan +62"
