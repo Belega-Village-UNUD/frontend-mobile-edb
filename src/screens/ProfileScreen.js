@@ -30,6 +30,7 @@ const DEFAULT_AVATAR = require("../assets/images/userDefault.png");
 export default function ProfileScreen({ navigation }) {
   const [userData, setUserData] = useState(null);
   const [userLogin, setUserLogin] = useState(false);
+  const [isSeller, setIsSeller] = useState(false);
   const [userImage, setUserImage] = useState(null);
 
   const handleUpdateAvatar = async (imageUri) => {
@@ -124,10 +125,10 @@ export default function ProfileScreen({ navigation }) {
           Authorization: `Bearer ${token}`,
         },
       });
-      const { email, is_verified } = response.data.data.user;
+      const { email, is_verified, role_id } = response.data.data.user;
       const { name, phone, address } = response.data.data.profile;
       if (response.data.status === 200) {
-        setUserData({ email, is_verified, name, phone, address });
+        setUserData({ email, is_verified, name, phone, address, role_id });
         setUserLogin(true);
         setUserImage(response.data.data.profile.avatar_link);
         console.log(name, phone, address);
@@ -411,6 +412,16 @@ export default function ProfileScreen({ navigation }) {
                   </Text>
                 </View>
               </TouchableOpacity>
+              {userData.role_id === "WGVUqKhyoV" && (
+                <TouchableOpacity onPress={() => setIsSeller(true)}>
+                  <Text>Beralih sebagai Seller</Text>
+                </TouchableOpacity>
+              )}
+              {isSeller && (
+                <TouchableOpacity>
+                  <Text>Konfirmasi Pesanan</Text>
+                </TouchableOpacity>
+              )}
             </View>
           )}
         </ScrollView>
