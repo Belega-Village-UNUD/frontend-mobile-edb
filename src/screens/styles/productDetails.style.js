@@ -105,6 +105,14 @@ const styles = StyleSheet.create({
     width: SIZES.width - 44,
   },
 
+  soldOutBtn: {
+    width: SIZES.width * 0.7,
+    backgroundColor: COLORS.gray3,
+    padding: SIZES.small / 2,
+    borderRadius: SIZES.large,
+    marginLeft: 12,
+  },
+
   cartBtn: {
     width: SIZES.width * 0.7,
     backgroundColor: COLORS.primary,
