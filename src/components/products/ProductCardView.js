@@ -1,17 +1,23 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
 import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 import { COLORS } from "../../constants/theme";
 import styles from "./productCardView.style";
 
-const ProductCardView = ({ item }) => {
-  const navigation = useNavigation();
+const ProductCardView = ({ item, onSelect }) => {
+  const noImage = require("../../assets/no-image-card.png");
   return (
-    <TouchableOpacity onPress={() => navigation.navigate("ProductDetails")}>
+    <TouchableOpacity onPress={() => onSelect(item.id)}>
       <View style={styles.container}>
         <View style={styles.imageContainer}>
-          <Image source={{ uri: item.image_product }} style={styles.image} />
+          {/* <Image
+            source={{ uri: item.image_product || noImage }}
+            style={styles.image}
+          /> */}
+          <Image
+            source={item.image_product ? { uri: item.image_product } : noImage}
+            style={styles.image}
+          />
         </View>
         <View style={styles.details}>
           <Text style={styles.title} numberOfLines={1}>

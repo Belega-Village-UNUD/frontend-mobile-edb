@@ -10,7 +10,7 @@ const Heading = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerText}>Product</Text>
+        <Text style={styles.headerText}>Produk</Text>
         <TouchableOpacity
           style={{ marginEnd: 12 }}
           onPress={() => navigation.navigate("ProductList")}

@@ -10,7 +10,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BASE_URI } from "@env";
 import WebView from "react-native-webview";
 
-const GUEST_DETAIL_PRODUCT_URI = BASE_URI + "/api/products/guest/";
+const GUEST_DETAIL_PRODUCT_URI = BASE_URI + "/api/product/guest/";
 const PAYMENT_URI = BASE_URI + "/api/transaction";
 const USER_PROFILE_URI = BASE_URI + "/api/profiles";
 const TYPES_URI = BASE_URI + "/api/types/";
