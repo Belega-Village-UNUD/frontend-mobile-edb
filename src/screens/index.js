@@ -13,6 +13,9 @@ import ProfileScreen from "./ProfileScreen";
 import ResetPasswordScreen from "./ResetPasswordScreen";
 import SearchScreen from "./SearchScreen";
 import SignupScreen from "./SignupScreen";
+import SellerTransactionScreen from "./SellerTransactionScreen";
+import OrderScreen from "./OrderScreen";
+import ConfirmationScreen from "./ConfirmationScreen";
 
 export {
   CartScreen,
@@ -30,4 +33,7 @@ export {
   SearchScreen,
   SignupScreen,
   ProductDetailsScreen,
+  SellerTransactionScreen,
+  OrderScreen,
+  ConfirmationScreen,
 };

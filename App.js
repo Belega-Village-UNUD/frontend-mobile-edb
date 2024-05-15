@@ -7,7 +7,14 @@ import AuthNavigation from "./src/navigation/AuthNavigation";
 import BottomTabNavigation from "./src/navigation/BottomTabNavigation";
 import ProfileNavigation from "./src/navigation/ProfileNavigation";
 import SplashNavigation from "./src/navigation/SplashNavigation";
-import { CartScreen, ProductDetailsScreen, ProductScreen } from "./src/screens";
+import {
+  CartScreen,
+  ProductDetailsScreen,
+  ProductScreen,
+  SellerTransactionScreen,
+  OrderScreen,
+  ConfirmationScreen,
+} from "./src/screens";
 
 const Stack = createNativeStackNavigator();
 
@@ -44,6 +51,15 @@ export default function App() {
         <Stack.Screen name="Edit" component={ProfileNavigation} />
         <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} />
         <Stack.Screen name="ProductList" component={ProductScreen} />
+        <Stack.Screen name="OrderNav" component={OrderScreen} />
+        <Stack.Screen
+          name="TransactionNav"
+          component={SellerTransactionScreen}
+        />
+        <Stack.Screen
+          name="ConfirmationScreen"
+          component={ConfirmationScreen}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
