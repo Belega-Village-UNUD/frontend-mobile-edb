@@ -157,7 +157,7 @@ export default function ProfileScreen({ navigation }) {
           navigation.navigate("Favorite");
           break;
         case "order":
-          navigation.navigate("Order");
+          navigation.navigate("OrderNav");
           break;
         case "cart":
           navigation.navigate("Cart");
@@ -235,6 +235,12 @@ export default function ProfileScreen({ navigation }) {
     } else {
       navigation.navigate("Edit", { screen: "Edit Profile" });
     }
+  };
+
+  const handleTransactionConfirm = () => {
+    navigation.navigate("TransactionNav", {
+      screen: "SellerTransactionScreen",
+    });
   };
 
   useFocusEffect(
@@ -412,14 +418,33 @@ export default function ProfileScreen({ navigation }) {
                   </Text>
                 </View>
               </TouchableOpacity>
-              {userData.role_id === "WGVUqKhyoV" && (
-                <TouchableOpacity onPress={() => setIsSeller(true)}>
-                  <Text>Beralih sebagai Seller</Text>
-                </TouchableOpacity>
-              )}
-              {isSeller && (
-                <TouchableOpacity>
-                  <Text>Konfirmasi Pesanan</Text>
+              {userData.role_id.includes("WGVUqKhyoV") &&
+                userData.role_id.includes("VVcAyIXevi") && (
+                  <TouchableOpacity onPress={() => setIsSeller(!isSeller)}>
+                    <View style={styles.menuItem(0.2)}>
+                      <Ionicons
+                        name="swap-horizontal"
+                        size={24}
+                        color={COLORS.primary}
+                      />
+                      <Text style={styles.menuText}>
+                        {isSeller
+                          ? "Beralih sebagai Buyer"
+                          : "Beralih sebagai Seller"}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
+              {isSeller && userData.role_id.includes("WGVUqKhyoV") && (
+                <TouchableOpacity onPress={handleTransactionConfirm}>
+                  <View style={styles.menuItem(0.2)}>
+                    <Ionicons
+                      name="cash-outline"
+                      size={24}
+                      color={COLORS.primary}
+                    />
+                    <Text style={styles.menuText}>Konfirmasi Pesanan</Text>
+                  </View>
                 </TouchableOpacity>
               )}
             </View>
