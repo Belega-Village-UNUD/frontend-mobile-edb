@@ -13,7 +13,6 @@ import {
   ProductScreen,
   SellerTransactionScreen,
   OrderScreen,
-  ConfirmationScreen,
 } from "./src/screens";
 
 const Stack = createNativeStackNavigator();
@@ -55,10 +54,6 @@ export default function App() {
         <Stack.Screen
           name="TransactionNav"
           component={SellerTransactionScreen}
-        />
-        <Stack.Screen
-          name="ConfirmationScreen"
-          component={ConfirmationScreen}
         />
       </Stack.Navigator>
     </NavigationContainer>

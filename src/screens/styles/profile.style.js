@@ -89,6 +89,16 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     fontSize: SIZES.xSmall,
   },
+  redDot: {
+    position: "absolute",
+    right: 0,
+    top: 20,
+    right: 10,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "red",
+  },
 });
 
 export default styles;

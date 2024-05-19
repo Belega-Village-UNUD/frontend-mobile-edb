@@ -15,7 +15,6 @@ import SearchScreen from "./SearchScreen";
 import SignupScreen from "./SignupScreen";
 import SellerTransactionScreen from "./SellerTransactionScreen";
 import OrderScreen from "./OrderScreen";
-import ConfirmationScreen from "./ConfirmationScreen";
 
 export {
   CartScreen,
@@ -35,5 +34,4 @@ export {
   ProductDetailsScreen,
   SellerTransactionScreen,
   OrderScreen,
-  ConfirmationScreen,
 };

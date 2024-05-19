@@ -21,6 +21,7 @@ import {
 } from "react-native";
 import { COLORS } from "../constants/theme";
 import styles from "./styles/profile.style";
+import { handleGetAllTransactions } from "./SellerTransactionScreen";
 
 const AVATAR_URI = BASE_URI + "/api/profiles/avatar";
 const PROFILE_URI = BASE_URI + "/api/profiles";
@@ -32,6 +33,7 @@ export default function ProfileScreen({ navigation }) {
   const [userLogin, setUserLogin] = useState(false);
   const [isSeller, setIsSeller] = useState(false);
   const [userImage, setUserImage] = useState(null);
+  const [hasNewPendingOrder, setHasNewPendingOrder] = useState(false);
 
   const handleUpdateAvatar = async (imageUri) => {
     let formData = new FormData();
@@ -245,7 +247,22 @@ export default function ProfileScreen({ navigation }) {
 
   useFocusEffect(
     React.useCallback(() => {
-      handleCheckUserLogin();
+      handleCheckUserLogin().then((isLoggedIn) => {
+        if (isLoggedIn) {
+          handleGetAllTransactions().then((transactions) => {
+            const newPendingOrder = transactions.some(
+              (transaction) => transaction.status === "PENDING"
+            );
+            setHasNewPendingOrder(newPendingOrder);
+          });
+        }
+      });
+      // handleGetAllTransactions().then((transactions) => {
+      //   const newPendingOrder = transactions.some(
+      //     (transaction) => transaction.status === "PENDING"
+      //   );
+      //   setHasNewPendingOrder(newPendingOrder);
+      // });
     }, [])
   );
 
@@ -444,6 +461,7 @@ export default function ProfileScreen({ navigation }) {
                       color={COLORS.primary}
                     />
                     <Text style={styles.menuText}>Konfirmasi Pesanan</Text>
+                    {hasNewPendingOrder && <View style={styles.redDot} />}
                   </View>
                 </TouchableOpacity>
               )}
