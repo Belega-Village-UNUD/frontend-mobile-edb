@@ -4,13 +4,12 @@ import { View, Text, Image, FlatList, Button, Alert } from "react-native";
 import styles from "./styles/transaction.styles";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation } from "@react-navigation/native";
 
 const CONFIRM_URI = `${BASE_URI}/api/transaction/confirm/`;
+const DECLINE_URI = `${BASE_URI}/api/transaction/decline/`;
 
 const All = ({ transactions, handleGetAllTransactions }) => {
   const [transaction, setTransaction] = useState(transactions);
-  const navigation = useNavigation();
 
   useEffect(() => {
     setTransaction(transactions);
@@ -52,6 +51,42 @@ const All = ({ transactions, handleGetAllTransactions }) => {
     }
   };
 
+  const handleDecline = async (transactionId) => {
+    try {
+      let token = await AsyncStorage.getItem("token");
+      const response = await axios.put(
+        `${DECLINE_URI}${transactionId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        const updatedTransactions = transaction.map((item) => {
+          if (item.id === transactionId) {
+            return response.data.data;
+          } else {
+            return item;
+          }
+        });
+
+        setTransaction(updatedTransactions);
+        Alert.alert("Success", "Berhasil Menolak Pesanan", [
+          { text: "OK", onPress: () => handleGetAllTransactions() },
+        ]);
+      } else {
+        Alert.alert("Failure", "Gagal Menolak Pesanan", [
+          { text: "OK", onPress: () => console.log("OK Pressed") },
+        ]);
+      }
+    } catch (error) {
+      console.error("Gagal Menolak Pesanan", error);
+    }
+  };
+
   const renderItem = ({ item }) => (
     <View style={styles.itemContainer}>
       <Image
@@ -73,12 +108,7 @@ const All = ({ transactions, handleGetAllTransactions }) => {
                 handleConfirm(item.id);
               }}
             />
-            <Button
-              title="Decline"
-              onPress={() =>
-                navigation.navigate("DeclineReason", { transactionId: item.id })
-              }
-            />
+            <Button title="Decline" onPress={() => handleDecline(item.id)} />
           </View>
         )}
       </View>

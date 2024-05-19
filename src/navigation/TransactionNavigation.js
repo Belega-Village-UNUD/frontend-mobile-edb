@@ -25,7 +25,12 @@ export default function TransactionNavigation({
         )}
       </Tab.Screen>
       <Tab.Screen name="Pending">
-        {() => <Pending transactions={transactions} />}
+        {() => (
+          <Pending
+            transactions={transactions}
+            handleGetAllTransactions={handleGetAllTransactions}
+          />
+        )}
       </Tab.Screen>
       <Tab.Screen name="Confirmed">
         {() => <Confirmed transactions={transactions} />}
