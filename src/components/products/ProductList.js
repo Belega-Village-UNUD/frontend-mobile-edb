@@ -19,11 +19,15 @@ const ProductList = () => {
     setError(null);
     setIsLoading(true);
     try {
-      const response = await axios.get(ALL_PRODUCT_URI);
-      setData(response.data.data);
+      const response = await fetch(ALL_PRODUCT_URI);
+      const data = await response.json();
+      console.log("33: ProductRow.js DATA: ", data.data);
+      setData(data.data);
+      //const response = await axios.get(ALL_PRODUCT_URI);
+      //tData(response.data.data);
       setIsLoading(false);
     } catch (error) {
-      console.log(error);
+      console.error(error);
       setError(error.message);
       setIsLoading(false);
     }

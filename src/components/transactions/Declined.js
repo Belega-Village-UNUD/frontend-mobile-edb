@@ -2,23 +2,29 @@ import React from "react";
 import { View, Text, Image, FlatList } from "react-native";
 import styles from "./styles/transaction.styles";
 
+const noImage = require("../../assets/no-image-card.png");
+
 const Declined = ({ transactions }) => {
-  const declinedTransactions = transactions.filter(
-    (transaction) => transaction.status === "CANCEL"
-  );
+  const declinedTransactions = transactions
+    ? transactions.filter((transaction) => transaction.status === "CANCEL")
+    : [];
 
   const renderItem = ({ item }) => (
     <View style={styles.itemContainer}>
       <Image
         style={styles.image}
-        source={{
-          uri: item.cart.product.image_product || "../../assets/no-image.png",
-        }} // replace 'default_image_url' with your actual default image url
+        source={
+          item.cart.product.image_product
+            ? { uri: item.cart.product.image_product }
+            : noImage
+        }
       />
       <View style={styles.infoContainer}>
         <Text style={styles.productName}>{item.cart.product.name_product}</Text>
         <Text style={styles.status}>Status: {item.status}</Text>
-        <Text style={styles.price}>Price: {item.cart.unit_price}</Text>
+        <Text style={styles.price}>
+          Price: {item.cart.unit_price * item.cart.qty}
+        </Text>
         <Text style={styles.qty}>Quantity: {item.cart.qty}</Text>
       </View>
     </View>

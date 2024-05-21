@@ -1,7 +1,6 @@
 import { BASE_URI } from "@env";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
 import { Formik } from "formik";
 import { useState } from "react";
 import {
@@ -22,11 +21,11 @@ import styles from "./styles/login.style";
 const validationSchema = Yup.object().shape({
   password: Yup.string()
     .min(8, "Password terlalu pendek")
-    .required("Password tidak boleh kosong")
-    .matches(
-      /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/,
-      "Password harus memiliki setidaknya satu simbol unik"
-    ),
+    .required("Password tidak boleh kosong"),
+  // .matches(
+  //   /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/,
+  //   "Password harus memiliki setidaknya satu simbol unik"
+  // ),
 
   email: Yup.string()
     .email("Email tidak valid")
@@ -57,14 +56,23 @@ export default function LoginScreen({ navigation }) {
     setLoader(true);
     try {
       const data = values;
-      const response = await axios.post(LOGIN_URI, data);
-      if (response.data.status == 200) {
+      const response = await fetch(LOGIN_URI, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      const responseData = await response.json();
+
+      if (responseData.status == 200) {
         setLoader(false);
-        await AsyncStorage.setItem("token", response.data.data.token);
+        await AsyncStorage.setItem("token", responseData.data.token);
         navigation.navigate("Bottom Navigation", { screen: "Home" });
       } else {
         setLoader(false);
-        Alert.alert("Error", response.data.message, [
+        Alert.alert("Error", responseData.message, [
           {
             text: "Ok",
             onPress: () => {},

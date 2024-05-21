@@ -1,7 +1,6 @@
 import { BASE_URI } from "@env";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
 import { Formik } from "formik";
 import { useState } from "react";
 import {
@@ -69,13 +68,18 @@ export default function ChangePasswordScreen({ navigation }) {
     try {
       const data = values;
       const token = await AsyncStorage.getItem("token");
-      const response = await axios.put(CHANGE_PASSWORD_URI, data, {
+      const response = await fetch(CHANGE_PASSWORD_URI, {
+        method: "PUT",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify(data),
       });
 
-      if (response.data.status === 200) {
+      const responseData = await response.json();
+
+      if (response.status === 200) {
         setLoader(false);
         Alert.alert(
           "Password Berhasil Diubah",
@@ -91,7 +95,7 @@ export default function ChangePasswordScreen({ navigation }) {
           ]
         );
       } else {
-        throw new Error(response.data.data.message);
+        throw new Error(responseData.data.message);
       }
     } catch (e) {
       setLoader(false);

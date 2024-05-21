@@ -1,7 +1,6 @@
 import { BASE_URI } from "@env";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
 import { Formik } from "formik";
 import { useState } from "react";
 import { Alert, Image, ScrollView, Text, TextInput, View } from "react-native";
@@ -40,10 +39,19 @@ export default function ForgotPasswordScreen({ navigation }) {
     setLoader(true);
     try {
       const data = values;
-      const response = await axios.post(FORGOT_URI, data);
-      if (response.data.status === 200) {
+      const response = await fetch(FORGOT_URI, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      const responseData = await response.json();
+
+      if (responseData.status === 200) {
         setLoader(false);
-        await AsyncStorage.setItem("tokenForgot", response.data.data.token);
+        await AsyncStorage.setItem("tokenForgot", responseData.data.token);
         Alert.alert("OTP Terkirim", "OTP telah dikirim ulang ke email anda", [
           {
             text: "Lanjutkan",

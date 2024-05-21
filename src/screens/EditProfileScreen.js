@@ -53,19 +53,20 @@ export default function EditProfileScreen({ navigation }) {
   const handleGetProfile = async () => {
     let token = await AsyncStorage.getItem("token");
     try {
-      const response = await axios({
-        method: "get",
-        url: PROFILE_URI,
+      const response = await fetch(PROFILE_URI, {
+        method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      if (response.data.success) {
-        setUserName(response.data.data.profile.name);
-        setUserPhone(response.data.data.profile.phone);
-        setUserImage(response.data.data.profile.avatar_link);
-        setUserAddress(response.data.data.profile.address);
+      const responseData = await response.json();
+
+      if (responseData.success) {
+        setUserName(responseData.data.profile.name);
+        setUserPhone(responseData.data.profile.phone);
+        setUserImage(responseData.data.profile.avatar_link);
+        setUserAddress(responseData.data.profile.address);
       }
     } catch (error) {
       console.error(error.message);
@@ -81,16 +82,18 @@ export default function EditProfileScreen({ navigation }) {
         phone: values.userPhone || userPhone,
         address: values.userAddress || userAddress,
       };
-      const response = await axios({
-        method: "put",
-        url: PROFILE_URI,
+      const response = await fetch(PROFILE_URI, {
+        method: "PUT",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        data: data,
+        body: JSON.stringify(data),
       });
 
-      if (response.data.success) {
+      const responseData = await response.json();
+
+      if (responseData.success) {
         setLoader(false);
         navigation.navigate("Profile");
         console.log(values);

@@ -29,8 +29,9 @@ const ProductDetailsScreen = ({ navigation, route }) => {
 
   const handleGetProductDetails = async () => {
     try {
-      const response = await axios.get(`${GUEST_DETAIL_PRODUCT_URI}${id}`);
-      setProduct(response.data.data);
+      const response = await fetch(`${GUEST_DETAIL_PRODUCT_URI}${id}`);
+      const data = await response.json();
+      setProduct(data.data);
       setIsLoading(false);
     } catch (error) {
       console.log(error);
@@ -38,31 +39,6 @@ const ProductDetailsScreen = ({ navigation, route }) => {
       setIsLoading(false);
     }
   };
-
-  // const handleGetProductType = async () => {
-  //   try {
-  //     const response = await axios.get(`${TYPES_URI}${product.id}`);
-  //     const { type_id } = response.data.data;
-  //     setProduct((prevProduct) => ({ ...prevProduct, type_id }));
-  //     setIsLoading(false);
-  //   } catch (error) {
-  //     console.log(error);
-  //     setError(error.message);
-  //     setIsLoading(false);
-  //   }
-  // };
-
-  // const handleGetProfile = async () => {
-  //   const userToken = await AsyncStorage.getItem("token");
-  //   const response = await axios.get(USER_PROFILE_URI, {
-  //     headers: {
-  //       Authorization: `Bearer ${userToken}`,
-  //     },
-  //   });
-  //   const { name, phone, address } = response.data.data.profile;
-  //   const { email } = response.data.data.user.email;
-  //   setProfile({ name, phone, address, email });
-  // };
 
   const handleBuyPress = async () => {
     const userToken = await AsyncStorage.getItem("token");
@@ -79,23 +55,26 @@ const ProductDetailsScreen = ({ navigation, route }) => {
       );
     } else {
       try {
-        const response = await axios.post(
-          `${PAYMENT_URI}`,
-          {
+        const response = await fetch(`${PAYMENT_URI}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userToken}`,
+          },
+          body: JSON.stringify({
             id: product.id + (Math.floor(Math.random() * 1000) + 1),
             productName: product.name_product,
             price: product.price,
             quantity: count,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${userToken}`,
-            },
-          }
-        );
-        setTransactionUrl(
-          `${SANDBOX_URI}/${response.data.data.midtrans_token}`
-        );
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+
+        const data = await response.json();
+        setTransactionUrl(`${SANDBOX_URI}/${data.data.midtrans_token}`);
       } catch (error) {
         console.log(error);
         Alert.alert("Error", "Something went wrong, please try again later.");
@@ -118,18 +97,22 @@ const ProductDetailsScreen = ({ navigation, route }) => {
       );
     } else {
       try {
-        const response = await axios.post(
-          `${BASE_URI}/api/carts`,
-          {
+        const response = await fetch(`${BASE_URI}/api/carts`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userToken}`,
+          },
+          body: JSON.stringify({
             product_id: id,
             quantity: count,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${userToken}`,
-            },
-          }
-        );
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+
         Alert.alert(
           "Success",
           "Your product has been added to cart, please check your cart.",

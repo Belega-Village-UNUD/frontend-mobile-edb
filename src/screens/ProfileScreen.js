@@ -7,7 +7,6 @@ import {
 } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
-import axios from "axios";
 import * as ImagePicker from "expo-image-picker";
 import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
@@ -45,18 +44,19 @@ export default function ProfileScreen({ navigation }) {
     });
     let token = await AsyncStorage.getItem("token");
     try {
-      const response = await axios({
-        method: "post",
-        url: AVATAR_URI,
-        data: formData,
+      const response = await fetch(AVATAR_URI, {
+        method: "POST",
+        body: formData,
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${token}`,
         },
       });
 
-      if (response.data.success) {
-        setUserImage(response.data.data.url);
+      const responseData = await response.json();
+
+      if (responseData.success) {
+        setUserImage(responseData.data.url);
       }
     } catch (error) {
       console.error(error.message);
@@ -102,13 +102,6 @@ export default function ProfileScreen({ navigation }) {
             }
           },
         },
-        // {
-        //   text: "🗑️ Hapus Avatar",
-        //   onPress: async () => {
-        //     setUserImage(null);
-        //     handleUpdateAvatar(null);
-        //   },
-        // },
         {
           text: "Cancel",
           onPress: () => {},
@@ -122,18 +115,20 @@ export default function ProfileScreen({ navigation }) {
   const handleCheckUserLogin = async () => {
     try {
       let token = await AsyncStorage.getItem("token");
-      const response = await axios.get(PROFILE_URI, {
+      const response = await fetch(PROFILE_URI, {
+        method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      const { email, is_verified, role_id } = response.data.data.user;
-      const { name, phone, address } = response.data.data.profile;
-      if (response.data.status === 200) {
+      const responseData = await response.json();
+      const { email, is_verified, role_id } = responseData.data.user;
+      const { name, phone, address } = responseData.data.profile;
+      if (responseData.status === 200) {
         setUserData({ email, is_verified, name, phone, address, role_id });
         setUserLogin(true);
-        setUserImage(response.data.data.profile.avatar_link);
-        console.log(name, phone, address);
+        setUserImage(responseData.data.profile.avatar_link);
+        console.log(PROFILE_URI);
       } else {
         setUserLogin(false);
       }
@@ -205,12 +200,16 @@ export default function ProfileScreen({ navigation }) {
       const data = {
         token: token,
       };
-      const response = await axios.post(OTP_URI, data, {
+      const response = await fetch(OTP_URI, {
+        method: "POST",
+        body: JSON.stringify(data),
         headers: {
           Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
       });
-      if (response.data.status === 200) {
+      const responseData = await response.json();
+      if (responseData.status === 200) {
         Alert.alert(
           "OTP Terkirim Ulang",
           "OTP telah dikirim ulang ke email anda",
@@ -224,7 +223,7 @@ export default function ProfileScreen({ navigation }) {
           ]
         );
       } else {
-        Alert.alert("OTP Resent Failed", response.data.message);
+        Alert.alert("OTP Resent Failed", responseData.message);
       }
     } catch (e) {
       console.log(e);
@@ -247,22 +246,17 @@ export default function ProfileScreen({ navigation }) {
 
   useFocusEffect(
     React.useCallback(() => {
-      handleCheckUserLogin().then((isLoggedIn) => {
-        if (isLoggedIn) {
-          handleGetAllTransactions().then((transactions) => {
-            const newPendingOrder = transactions.some(
-              (transaction) => transaction.status === "PENDING"
-            );
-            setHasNewPendingOrder(newPendingOrder);
-          });
-        }
-      });
-      // handleGetAllTransactions().then((transactions) => {
-      //   const newPendingOrder = transactions.some(
-      //     (transaction) => transaction.status === "PENDING"
-      //   );
-      //   setHasNewPendingOrder(newPendingOrder);
-      // });
+      handleCheckUserLogin();
+      handleGetAllTransactions()
+        .then((transactions) => {
+          const newPendingOrder = transactions.some(
+            (transaction) => transaction.status === "PENDING"
+          );
+          setHasNewPendingOrder(newPendingOrder);
+        })
+        .catch((error) => {
+          console.log("Failed to get all transactions", error);
+        });
     }, [])
   );
 
