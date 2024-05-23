@@ -7,20 +7,55 @@ import {
   FlatList,
   Alert,
   TouchableOpacity,
+  Modal,
+  TextInput,
 } from "react-native";
+import { RadioButton } from "react-native-paper";
 import styles from "./styles/transaction.styles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const CONFIRM_URI = `${BASE_URI}/api/transaction/confirm/`;
 const DECLINE_URI = `${BASE_URI}/api/transaction/decline/`;
+const CANCEL_URI = `${BASE_URI}/api/transaction/buyer/cancel/`;
+
 const noImage = require("../../assets/no-image-card.png");
 
-const All = ({ transactions, handleGetAllTransactions }) => {
+const All = ({ transactions, handleGetAllTransactions, screen }) => {
   const [transaction, setTransaction] = useState(transactions);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [selectedReason, setSelectedReason] = useState("price");
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
 
   useEffect(() => {
     setTransaction(transactions);
   }, [transactions]);
+
+  const handleCancelTransaction = async (transactionId) => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      const response = await fetch(`${CANCEL_URI}${transactionId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          reason: cancelReason,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("HTTP status " + response.status);
+      }
+
+      const data = await response.json();
+      console.log(data);
+      setModalVisible(false);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const handleConfirm = async (transactionId) => {
     try {
@@ -109,7 +144,7 @@ const All = ({ transactions, handleGetAllTransactions }) => {
           Price: {item.cart.unit_price * item.cart.qty}
         </Text>
         <Text style={styles.qty}>Quantity: {item.cart.qty}</Text>
-        {item.status === "PENDING" && (
+        {item.status === "PENDING" && screen === "SellerTransactionScreen" && (
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={styles.confirmButton}
@@ -129,6 +164,29 @@ const All = ({ transactions, handleGetAllTransactions }) => {
             </TouchableOpacity>
           </View>
         )}
+        {item.status === "PAYABLE" && screen === "OrderScreen" && (
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={styles.confirmButton}
+              title="Pay"
+              onPress={() => {
+                // handlePay(item.id);
+              }}
+            >
+              <Text style={styles.buttonText}>Pay</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.declineButton}
+              title="Cancel"
+              onPress={() => {
+                setSelectedTransaction(item.id);
+                setModalVisible(true);
+              }}
+            >
+              <Text style={styles.buttonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     </View>
   );
@@ -140,6 +198,82 @@ const All = ({ transactions, handleGetAllTransactions }) => {
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
       />
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          setModalVisible(!modalVisible);
+        }}
+      >
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalText}>Pilih alasan pembatalan:</Text>
+            <RadioButton.Group
+              onValueChange={(newValue) => setSelectedReason(newValue)}
+              value={selectedReason}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "flex-start",
+                  alignItems: "center",
+                }}
+              >
+                <RadioButton value="price" />
+                <Text style={{ marginRight: 10 }}>Harga Terlalu Mahal</Text>
+              </View>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "flex-start",
+                  alignItems: "center",
+                }}
+              >
+                <RadioButton value="change" />
+                <Text style={{ marginRight: 10 }}>Berubah Pikiran</Text>
+              </View>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "flex-start",
+                  alignItems: "center",
+                }}
+              >
+                <RadioButton value="other" />
+                <Text style={{ marginRight: 10 }}>Lainnya</Text>
+              </View>
+            </RadioButton.Group>
+            {selectedReason === "other" && (
+              <TextInput
+                style={styles.modalInput}
+                onChangeText={setCancelReason}
+                value={cancelReason}
+                placeholder="Enter reason"
+              />
+            )}
+            <View style={styles.modalButtonContainer}>
+              <TouchableOpacity
+                style={styles.modalButton}
+                title="Submit"
+                onPress={() => {
+                  handleCancelTransaction(selectedTransaction);
+                  // handleGetAllTransactions();
+                }}
+              >
+                <Text style={styles.modalButtonText}>Submit</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalButtonClose}
+                title="Close"
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={styles.modalButtonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };

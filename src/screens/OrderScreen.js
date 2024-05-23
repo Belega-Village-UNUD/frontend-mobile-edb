@@ -4,13 +4,12 @@ import { View } from "react-native";
 import TransactionNavigation from "../navigation/TransactionNavigation";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const GET_ALL_URI = `${BASE_URI}/api/transaction/`;
+const GET_ALL_URI = `${BASE_URI}/api/transaction/buyer/all`;
 
-export const handleGetAllTransactions = async () => {
+export const handleGetAllOrders = async () => {
   try {
     let token = await AsyncStorage.getItem("token");
-    let store_id = await AsyncStorage.getItem("store_id");
-    const response = await fetch(`${GET_ALL_URI}?store_id=${store_id}`, {
+    const response = await fetch(GET_ALL_URI, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -30,24 +29,24 @@ export const handleGetAllTransactions = async () => {
   }
 };
 
-export default function SellerTransactionScreen() {
-  const [transactions, setTransactions] = useState([]);
+export default function OrderScreen() {
+  const [orders, setOrders] = useState([]);
 
   useEffect(() => {
-    handleGetAllTransactions().then(setTransactions);
+    handleGetAllOrders().then(setOrders);
   }, []);
 
-  const handleRefreshTransactions = async () => {
-    const updatedTransactions = await handleGetAllTransactions();
-    setTransactions(updatedTransactions);
+  const handleRefreshOrders = async () => {
+    const updatedOrders = await handleGetAllOrders();
+    setOrders(updatedOrders);
   };
 
   return (
     <View style={{ flex: 1 }}>
       <TransactionNavigation
-        transactions={transactions}
-        handleGetAllTransactions={handleRefreshTransactions}
-        screen="SellerTransactionScreen"
+        transactions={orders}
+        handleGetAllOrders={handleRefreshOrders}
+        screen="OrderScreen"
       />
     </View>
   );

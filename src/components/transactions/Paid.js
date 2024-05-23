@@ -4,7 +4,7 @@ import styles from "./styles/transaction.styles";
 
 const noImage = require("../../assets/no-image-card.png");
 
-const Payed = ({ transactions }) => {
+const Paid = ({ transactions }) => {
   const payedTransactions = transactions
     ? transactions.filter((transaction) => transaction.status === "SUCCESS")
     : [];
@@ -47,4 +47,4 @@ const Payed = ({ transactions }) => {
   );
 };
 
-export default Payed;
+export default Paid;

@@ -15,7 +15,7 @@ const CONFIRM_URI = `${BASE_URI}/api/transaction/confirm/`;
 const DECLINE_URI = `${BASE_URI}/api/transaction/decline/`;
 const noImage = require("../../assets/no-image-card.png");
 
-const Pending = ({ transactions, handleGetAllTransactions }) => {
+const Pending = ({ transactions, handleGetAllTransactions, screen }) => {
   const [transaction, setTransaction] = useState(transactions);
   const pendingTransactions = transactions
     ? transactions.filter((transaction) => transaction.status === "PENDING")
@@ -53,7 +53,7 @@ const Pending = ({ transactions, handleGetAllTransactions }) => {
         ]);
       } else {
         Alert.alert("Failure", "Gagal Konfirmasi Pesanan", [
-          { text: "OK", onPress: () => console.log("OK Pressed") },
+          { text: "OK", onPress: () => handleGetAllTransactions() },
         ]);
       }
     } catch (error) {
@@ -114,24 +114,26 @@ const Pending = ({ transactions, handleGetAllTransactions }) => {
           Price: {item.cart.unit_price * item.cart.qty}
         </Text>
         <Text style={styles.qty}>Quantity: {item.cart.qty}</Text>
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.confirmButton}
-            title="Confirm"
-            onPress={() => {
-              handleConfirmTransaction(item.id);
-            }}
-          >
-            <Text style={styles.buttonText}>Confirm</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.declineButton}
-            title="Decline"
-            onPress={() => handleDeclineTransaction(item.id)}
-          >
-            <Text style={styles.buttonText}>Decline</Text>
-          </TouchableOpacity>
-        </View>
+        {screen === "SellerTransactionScreen" && (
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={styles.confirmButton}
+              title="Confirm"
+              onPress={() => {
+                handleConfirmTransaction(item.id);
+              }}
+            >
+              <Text style={styles.buttonText}>Confirm</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.declineButton}
+              title="Decline"
+              onPress={() => handleDeclineTransaction(item.id)}
+            >
+              <Text style={styles.buttonText}>Decline</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     </View>
   );
@@ -146,9 +148,7 @@ const Pending = ({ transactions, handleGetAllTransactions }) => {
         />
       ) : (
         <View style={styles.messageContainer}>
-          <Text style={styles.message}>
-            Belum ada transaksi yang masuk ke toko anda
-          </Text>
+          <Text style={styles.message}>Belum ada transaksi yang dilakukan</Text>
         </View>
       )}
     </View>
