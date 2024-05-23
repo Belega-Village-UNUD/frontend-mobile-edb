@@ -32,10 +32,14 @@ const All = ({ transactions, handleGetAllTransactions, screen }) => {
   }, [transactions]);
 
   const handleCancelTransaction = async (transactionId) => {
+    if (selectedReason === "other" && cancelReason.trim() === "") {
+      Alert.alert("Error", "Anda harus memasukkan alasan pembatalan");
+      return;
+    }
     try {
       const token = await AsyncStorage.getItem("token");
       const response = await fetch(`${CANCEL_URI}${transactionId}`, {
-        method: "POST",
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -46,6 +50,7 @@ const All = ({ transactions, handleGetAllTransactions, screen }) => {
       });
 
       if (!response.ok) {
+        console.log(`${CANCEL_URI}${transactionId}`);
         throw new Error("HTTP status " + response.status);
       }
 
@@ -210,7 +215,20 @@ const All = ({ transactions, handleGetAllTransactions, screen }) => {
           <View style={styles.modalView}>
             <Text style={styles.modalText}>Pilih alasan pembatalan:</Text>
             <RadioButton.Group
-              onValueChange={(newValue) => setSelectedReason(newValue)}
+              onValueChange={(newValue) => {
+                setSelectedReason(newValue);
+                switch (newValue) {
+                  case "price":
+                    setCancelReason("Harga Terlalu Mahal");
+                    break;
+                  case "change":
+                    setCancelReason("Berubah Pikiran");
+                    break;
+                  case "other":
+                    setCancelReason("");
+                    break;
+                }
+              }}
               value={selectedReason}
             >
               <View
@@ -249,7 +267,7 @@ const All = ({ transactions, handleGetAllTransactions, screen }) => {
                 style={styles.modalInput}
                 onChangeText={setCancelReason}
                 value={cancelReason}
-                placeholder="Enter reason"
+                placeholder="Masukkan alasan pembatalan"
               />
             )}
             <View style={styles.modalButtonContainer}>
@@ -258,7 +276,6 @@ const All = ({ transactions, handleGetAllTransactions, screen }) => {
                 title="Submit"
                 onPress={() => {
                   handleCancelTransaction(selectedTransaction);
-                  // handleGetAllTransactions();
                 }}
               >
                 <Text style={styles.modalButtonText}>Submit</Text>

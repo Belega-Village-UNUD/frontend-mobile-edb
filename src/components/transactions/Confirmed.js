@@ -7,6 +7,7 @@ import {
   FlatList,
   TouchableOpacity,
   Modal,
+  Alert,
   TextInput,
 } from "react-native";
 import { RadioButton } from "react-native-paper";
@@ -16,8 +17,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const CANCEL_URI = `${BASE_URI}/api/transaction/buyer/cancel/`;
 const noImage = require("../../assets/no-image-card.png");
 
-const Confirmed = ({ transactions, handleGetAllTransaction, screen }) => {
+const Confirmed = ({ transactions, handleGetAllTransactions, screen }) => {
   const [modalVisible, setModalVisible] = useState(false);
+  const [transaction, setTransaction] = useState(transactions);
   const [cancelReason, setCancelReason] = useState("");
   const [selectedReason, setSelectedReason] = useState("price");
   const [selectedTransaction, setSelectedTransaction] = useState(null);
@@ -31,16 +33,27 @@ const Confirmed = ({ transactions, handleGetAllTransaction, screen }) => {
   };
 
   const handleCancelTransaction = async (transactionId) => {
+    let reason;
+    if (selectedReason === "other") {
+      if (cancelReason.trim() === "") {
+        Alert.alert("Error", "Anda harus memasukkan alasan pembatalan");
+        return;
+      }
+      reason = cancelReason;
+    } else {
+      reason =
+        selectedReason === "price" ? "Harga Terlalu Mahal" : "Berubah Pikiran";
+    }
     try {
       const token = await AsyncStorage.getItem("token");
       const response = await fetch(`${CANCEL_URI}${transactionId}`, {
-        method: "POST",
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          reason: cancelReason,
+          reason: reason,
         }),
       });
 
@@ -50,7 +63,25 @@ const Confirmed = ({ transactions, handleGetAllTransaction, screen }) => {
 
       const data = await response.json();
       console.log(data);
+      if (data.success) {
+        const updatedTransactions = transactions.map((item) => {
+          if (item.id === transactionId) {
+            return data.data;
+          } else {
+            return item;
+          }
+        });
+
+        setTransaction(updatedTransactions);
+      }
+
       setModalVisible(false);
+      Alert.alert("Success", "Pembatalan transaksi berhasil", [
+        {
+          text: "OK",
+          onPress: () => handleGetAllTransactions(),
+        },
+      ]);
     } catch (error) {
       console.error(error);
     }
@@ -116,7 +147,9 @@ const Confirmed = ({ transactions, handleGetAllTransaction, screen }) => {
           <View style={styles.modalView}>
             <Text style={styles.modalText}>Pilih alasan pembatalan:</Text>
             <RadioButton.Group
-              onValueChange={(newValue) => setSelectedReason(newValue)}
+              onValueChange={(newValue) => {
+                setSelectedReason(newValue);
+              }}
               value={selectedReason}
             >
               <View
@@ -155,7 +188,7 @@ const Confirmed = ({ transactions, handleGetAllTransaction, screen }) => {
                 style={styles.modalInput}
                 onChangeText={setCancelReason}
                 value={cancelReason}
-                placeholder="Enter reason"
+                placeholder="Masukkan alasan pembatalan"
               />
             )}
             <View style={styles.modalButtonContainer}>

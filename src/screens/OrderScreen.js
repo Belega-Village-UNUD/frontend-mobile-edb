@@ -45,7 +45,7 @@ export default function OrderScreen() {
     <View style={{ flex: 1 }}>
       <TransactionNavigation
         transactions={orders}
-        handleGetAllOrders={handleRefreshOrders}
+        handleGetAllTransactions={handleRefreshOrders}
         screen="OrderScreen"
       />
     </View>
