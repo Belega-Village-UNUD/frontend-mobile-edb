@@ -15,17 +15,27 @@ export const handleGetAllOrders = async () => {
       },
     });
 
-    const data = await response.json();
-    console.log(data);
+    if (!response.ok) {
+      console.log(`Failed to fetch orders: ${response.status}`);
+      return;
+    }
+
+    let data;
+    try {
+      data = await response.json();
+    } catch (error) {
+      console.log("Failed to parse JSON:", error);
+      return;
+    }
 
     if (response.status === 200) {
-      console.log("Fetched transactions successfully");
+      console.log("Fetched orders successfully");
       return data.data;
     } else {
-      console.log("Failed to fetch transactions");
+      console.log("Failed to fetch orders");
     }
   } catch (e) {
-    console.log("An error occurred while fetching transactions:", e);
+    console.log("An error occurred while fetching orders:", e);
   }
 };
 

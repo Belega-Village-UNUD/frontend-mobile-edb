@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
   },
 
   descriptionWrapper: {
-    marginTop: SIZES.large * 2,
+    marginTop: SIZES.xSmall,
     marginHorizontal: SIZES.large,
   },
 
@@ -145,6 +145,18 @@ const styles = StyleSheet.create({
     fontSize: SIZES.medium,
     textAlign: "center",
     color: COLORS.lightWhite,
+  },
+  storeNameContainer: {
+    width: "75%",
+    overflow: "hidden", // This will hide any child components (like the text) that go outside the boundaries of the view
+  },
+  storeName: {
+    fontSize: 18,
+    fontFamily: "bold",
+    color: "#888",
+    marginHorizontal: 20,
+    marginVertical: 20,
+    paddingTop: 25,
   },
 });
 

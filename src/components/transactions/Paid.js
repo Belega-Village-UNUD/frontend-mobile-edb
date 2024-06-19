@@ -11,22 +11,34 @@ const Paid = ({ transactions }) => {
 
   const renderItem = ({ item }) => (
     <View style={styles.itemContainer}>
-      <Image
-        style={styles.image}
-        source={
-          item.cart.product.image_product
-            ? { uri: item.cart.product.image_product }
-            : noImage
-        }
-      />
-      <View style={styles.infoContainer}>
-        <Text style={styles.productName}>{item.cart.product.name_product}</Text>
-        <Text style={styles.status}>Status: {item.status}</Text>
-        <Text style={styles.price}>
-          Price: {item.cart.unit_price * item.cart.qty}
-        </Text>
-        <Text style={styles.qty}>Quantity: {item.cart.qty}</Text>
-      </View>
+      {item.cart_details.map((cartDetail) => (
+        <React.Fragment key={cartDetail.id}>
+          {cartDetail.product ? (
+            <>
+              <Image
+                style={styles.image}
+                source={
+                  cartDetail.product.image_product
+                    ? { uri: cartDetail.product.image_product }
+                    : noImage
+                }
+              />
+              <View style={styles.infoContainer}>
+                <Text style={styles.productName}>
+                  {cartDetail.product.name_product}
+                </Text>
+                <Text style={styles.status}>Status: {item.status}</Text>
+                <Text style={styles.price}>
+                  Price: {cartDetail.unit_price * cartDetail.qty}
+                </Text>
+                <Text style={styles.qty}>Quantity: {cartDetail.qty}</Text>
+              </View>
+            </>
+          ) : (
+            <Text>No product details available</Text>
+          )}
+        </React.Fragment>
+      ))}
     </View>
   );
 

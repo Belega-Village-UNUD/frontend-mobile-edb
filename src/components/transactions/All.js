@@ -9,14 +9,18 @@ import {
   TouchableOpacity,
   Modal,
   TextInput,
+  RefreshControl,
+  Linking,
 } from "react-native";
 import { RadioButton } from "react-native-paper";
 import styles from "./styles/transaction.styles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import WebView from "react-native-webview";
 
 const CONFIRM_URI = `${BASE_URI}/api/transaction/confirm/`;
 const DECLINE_URI = `${BASE_URI}/api/transaction/decline/`;
 const CANCEL_URI = `${BASE_URI}/api/transaction/buyer/cancel/`;
+const GET_ONE_URI = `${BASE_URI}/api/transaction/buyer/`;
 
 const noImage = require("../../assets/no-image-card.png");
 
@@ -26,15 +30,142 @@ const All = ({ transactions, handleGetAllTransactions, screen }) => {
   const [cancelReason, setCancelReason] = useState("");
   const [selectedReason, setSelectedReason] = useState("price");
   const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [redirectLink, setRedirectLink] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [paymentTransactionId, setPaymentTransactionId] = useState(null);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    handleGetAllTransactions().then(() => setRefreshing(false));
+  }, []);
 
   useEffect(() => {
     setTransaction(transactions);
   }, [transactions]);
 
+  const handlePay = async (id) => {
+    try {
+      let token = await AsyncStorage.getItem("token");
+      const response = await fetch(`${GET_ONE_URI}${id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const result = await response.json();
+
+      if (result.status === 200 && result.success) {
+        const redirectUrl = result.data.redirect_url;
+        setRedirectLink(redirectUrl);
+        setPaymentTransactionId(id);
+      } else {
+        console.error("Failed to retrieve transaction");
+      }
+    } catch (error) {
+      console.error("Failed to pay transaction", error);
+    }
+  };
+
+  // const handlePay = async (id) => {
+  //   try {
+  //     let token = await AsyncStorage.getItem("token");
+  //     const response = await fetch(`${GET_ONE_URI}${id}`, {
+  //       method: "GET",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     });
+  //     const result = await response.json();
+
+  //     if (result.status === 200 && result.success) {
+  //       const redirectUrl = result.data.redirect_url;
+  //       console.log(redirectLink);
+  //       setRedirectLink(redirectUrl);
+  //       setPaymentTransactionId(id);
+
+  //       // Open the Snap payment page
+  //       if (await Linking.canOpenURL(redirectUrl)) {
+  //         await Linking.openURL(redirectUrl);
+  //       } else {
+  //         console.error("Failed to open URL: ", redirectUrl);
+  //       }
+  //     } else {
+  //       console.error("Failed to retrieve transaction");
+  //     }
+  //   } catch (error) {
+  //     console.error("Failed to pay transaction", error);
+  //   }
+  // };
+
+  const handlePaymentSuccess = async () => {
+    try {
+      let token = await AsyncStorage.getItem("token");
+      const response = await fetch(
+        `${BASE_URI}/api/transaction/buyer/${paymentTransactionId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("HTTP status " + response.status);
+      }
+
+      const data = await response.json();
+      // i want to create alert and
+    } catch (error) {
+      console.log("Failed to update transaction status", error);
+    }
+  };
+
+  // const handleCancelTransaction = async (transactionId) => {
+  //   if (selectedReason === "other" && cancelReason.trim() === "") {
+  //     Alert.alert("Error", "Anda harus memasukkan alasan pembatalan");
+  //     return;
+  //   }
+  //   try {
+  //     const token = await AsyncStorage.getItem("token");
+  //     const response = await fetch(`${CANCEL_URI}${transactionId}`, {
+  //       method: "PUT",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //       body: JSON.stringify({
+  //         reason: cancelReason,
+  //       }),
+  //     });
+
+  //     if (!response.ok) {
+  //       // console.log(`${CANCEL_URI}${transactionId}`);
+  //       throw new Error("HTTP status " + response.status);
+  //     }
+
+  //     const data = await response.json();
+  //     // console.log(data);
+  //     setModalVisible(false);
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // };
+
   const handleCancelTransaction = async (transactionId) => {
-    if (selectedReason === "other" && cancelReason.trim() === "") {
-      Alert.alert("Error", "Anda harus memasukkan alasan pembatalan");
-      return;
+    let reason;
+    if (selectedReason === "other") {
+      if (cancelReason.trim() === "") {
+        Alert.alert("Error", "Anda harus memasukkan alasan pembatalan");
+        return;
+      }
+      reason = cancelReason;
+    } else {
+      reason =
+        selectedReason === "price" ? "Harga Terlalu Mahal" : "Berubah Pikiran";
     }
     try {
       const token = await AsyncStorage.getItem("token");
@@ -45,18 +176,35 @@ const All = ({ transactions, handleGetAllTransactions, screen }) => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          reason: cancelReason,
+          reason: reason,
         }),
       });
 
       if (!response.ok) {
-        console.log(`${CANCEL_URI}${transactionId}`);
         throw new Error("HTTP status " + response.status);
       }
 
       const data = await response.json();
       console.log(data);
+      if (data.success) {
+        const updatedTransactions = transactions.map((item) => {
+          if (item.id === transactionId) {
+            return data.data;
+          } else {
+            return item;
+          }
+        });
+
+        setTransaction(updatedTransactions);
+      }
+
       setModalVisible(false);
+      Alert.alert("Success", "Pembatalan transaksi berhasil", [
+        {
+          text: "OK",
+          onPress: () => handleGetAllTransactions(),
+        },
+      ]);
     } catch (error) {
       console.error(error);
     }
@@ -72,7 +220,18 @@ const All = ({ transactions, handleGetAllTransactions, screen }) => {
         },
       });
 
-      const data = await response.json();
+      if (!response.ok) {
+        console.error(`Failed to confirm transaction: ${response.status}`);
+        return;
+      }
+
+      let data;
+      try {
+        data = await response.json();
+      } catch (error) {
+        console.error("Failed to parse JSON", error);
+        return;
+      }
 
       if (data.success) {
         const updatedTransactions = transaction.map((item) => {
@@ -133,76 +292,119 @@ const All = ({ transactions, handleGetAllTransactions, screen }) => {
   };
 
   const renderItem = ({ item }) => (
-    <View style={styles.itemContainer}>
-      <Image
-        style={styles.image}
-        source={
-          item.cart.product.image_product
-            ? { uri: item.cart.product.image_product }
-            : noImage
-        }
-      />
-      <View style={styles.infoContainer}>
-        <Text style={styles.productName}>{item.cart.product.name_product}</Text>
-        <Text style={styles.status}>Status: {item.status}</Text>
-        <Text style={styles.price}>
-          Price: {item.cart.unit_price * item.cart.qty}
-        </Text>
-        <Text style={styles.qty}>Quantity: {item.cart.qty}</Text>
-        {item.status === "PENDING" && screen === "SellerTransactionScreen" && (
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.confirmButton}
-              title="Confirm"
-              onPress={() => {
-                handleConfirm(item.id);
-              }}
-            >
-              <Text style={styles.buttonText}>Confirm</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.declineButton}
-              title="Decline"
-              onPress={() => handleDecline(item.id)}
-            >
-              <Text style={styles.buttonText}>Decline</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-        {item.status === "PAYABLE" && screen === "OrderScreen" && (
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.confirmButton}
-              title="Pay"
-              onPress={() => {
-                // handlePay(item.id);
-              }}
-            >
-              <Text style={styles.buttonText}>Pay</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.declineButton}
-              title="Cancel"
-              onPress={() => {
-                setSelectedTransaction(item.id);
-                setModalVisible(true);
-              }}
-            >
-              <Text style={styles.buttonText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
+    <View
+      style={[
+        styles.itemContainer,
+        item.cart_details.length > 1 && styles.itemContainerColumn,
+      ]}
+    >
+      {item.cart_details.map((cartDetail) => (
+        <React.Fragment key={cartDetail.id}>
+          {cartDetail.product ? (
+            <>
+              <Image
+                style={styles.image}
+                source={
+                  cartDetail.product.image_product
+                    ? { uri: cartDetail.product.image_product }
+                    : noImage
+                }
+              />
+              <View style={styles.infoContainer}>
+                <Text style={styles.productName}>
+                  {cartDetail.product.name_product}
+                </Text>
+                <Text style={styles.status}>Status: {item.status}</Text>
+                <Text style={styles.price}>
+                  Price: {cartDetail.unit_price * cartDetail.qty}
+                </Text>
+                <Text style={styles.qty}>Quantity: {cartDetail.qty}</Text>
+              </View>
+            </>
+          ) : (
+            <Text>No Product Details Available</Text>
+          )}
+        </React.Fragment>
+      ))}
+      {item.status === "PENDING" && screen === "SellerTransactionScreen" && (
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.confirmButton}
+            title="Confirm"
+            onPress={() => {
+              handleConfirm(item.id);
+            }}
+          >
+            <Text style={styles.buttonText}>Confirm</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.declineButton}
+            title="Decline"
+            onPress={() => handleDecline(item.id)}
+          >
+            <Text style={styles.buttonText}>Decline</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+      {item.status === "PAYABLE" && screen === "OrderScreen" && (
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.confirmButton}
+            title="Pay"
+            onPress={() => {
+              handlePay(item.id);
+            }}
+          >
+            <Text style={styles.buttonText}>Pay</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.declineButton}
+            title="Cancel"
+            onPress={() => {
+              setSelectedTransaction(item.id);
+              setModalVisible(true);
+            }}
+          >
+            <Text style={styles.buttonText}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={transactions}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-      />
+      {redirectLink ? (
+        <WebView
+          source={{ uri: redirectLink }}
+          style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0 }}
+          onNavigationStateChange={(navState) => {
+            const url = navState.url;
+            // Check if the URL ends with '#/409'
+            if (
+              url.endsWith("#/409") ||
+              url.endsWith("#/success") ||
+              url.endsWith("#/407")
+            ) {
+              // Redirect back to your app
+              setTimeout(() => {
+                setRedirectLink(null);
+                handlePaymentSuccess(selectedTransaction);
+              }, 2000);
+              refreshing(true);
+            }
+          }}
+        />
+      ) : (
+        <FlatList
+          data={transactions}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        />
+      )}
       <Modal
         animationType="slide"
         transparent={true}
@@ -217,17 +419,6 @@ const All = ({ transactions, handleGetAllTransactions, screen }) => {
             <RadioButton.Group
               onValueChange={(newValue) => {
                 setSelectedReason(newValue);
-                switch (newValue) {
-                  case "price":
-                    setCancelReason("Harga Terlalu Mahal");
-                    break;
-                  case "change":
-                    setCancelReason("Berubah Pikiran");
-                    break;
-                  case "other":
-                    setCancelReason("");
-                    break;
-                }
               }}
               value={selectedReason}
             >

@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { useCallback } from "react";
+import { CartProvider } from "./src/provider/CartProvider";
 import AuthNavigation from "./src/navigation/AuthNavigation";
 import BottomTabNavigation from "./src/navigation/BottomTabNavigation";
 import ProfileNavigation from "./src/navigation/ProfileNavigation";
@@ -38,24 +39,29 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Splash" component={SplashNavigation} />
-        <Stack.Screen
-          name="Bottom Navigation"
-          component={BottomTabNavigation}
-        />
-        <Stack.Screen name="Cart" component={CartScreen} />
-        <Stack.Screen name="Auth" component={AuthNavigation} />
-        <Stack.Screen name="Edit" component={ProfileNavigation} />
-        <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} />
-        <Stack.Screen name="ProductList" component={ProductScreen} />
-        <Stack.Screen name="OrderNav" component={OrderScreen} />
-        <Stack.Screen
-          name="TransactionNav"
-          component={SellerTransactionScreen}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <CartProvider>
+      <NavigationContainer>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Splash" component={SplashNavigation} />
+          <Stack.Screen
+            name="Bottom Navigation"
+            component={BottomTabNavigation}
+          />
+          <Stack.Screen name="Cart" component={CartScreen} />
+          <Stack.Screen name="Auth" component={AuthNavigation} />
+          <Stack.Screen name="Edit" component={ProfileNavigation} />
+          <Stack.Screen
+            name="ProductDetails"
+            component={ProductDetailsScreen}
+          />
+          <Stack.Screen name="ProductList" component={ProductScreen} />
+          <Stack.Screen name="OrderNav" component={OrderScreen} />
+          <Stack.Screen
+            name="TransactionNav"
+            component={SellerTransactionScreen}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </CartProvider>
   );
 }

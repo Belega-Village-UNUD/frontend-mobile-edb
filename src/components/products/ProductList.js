@@ -1,6 +1,5 @@
 import { View, Text, FlatList, ActivityIndicator } from "react-native";
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import styles from "./productList.style";
 import { BASE_URI } from "@env";
 import { SIZES, COLORS } from "../../constants/theme";

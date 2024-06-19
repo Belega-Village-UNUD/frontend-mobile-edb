@@ -38,6 +38,8 @@ const Pending = ({ transactions, handleGetAllTransactions, screen }) => {
 
       const data = await response.json();
 
+      console.log("47: This is the data.redirect_url", data.data.redirect_url);
+      console.log(data.data);
       if (data.success) {
         const updatedTransactions = transactions.map((item) => {
           if (item.id === transactionId) {
@@ -48,8 +50,19 @@ const Pending = ({ transactions, handleGetAllTransactions, screen }) => {
         });
 
         setTransaction(updatedTransactions);
+        const transactionData = {
+          id: data.data.id,
+          token: data.data.token,
+          redirect_url: data.data.redirect_url,
+          updatedAt: data.data.updatedAt,
+        };
+
+        await AsyncStorage.setItem(
+          `transaction-${data.data.id}`,
+          JSON.stringify(transactionData)
+        );
         Alert.alert("Success", "Konfirmasi Pesanan Berhasil", [
-          { text: "OK", onPress: () => handleGetAllTransactions() },
+          { text: "OK", onPress: () => console.log("Ok") },
         ]);
       } else {
         Alert.alert("Failure", "Gagal Konfirmasi Pesanan", [
@@ -99,42 +112,54 @@ const Pending = ({ transactions, handleGetAllTransactions, screen }) => {
 
   const renderItem = ({ item }) => (
     <View style={styles.itemContainer}>
-      <Image
-        style={styles.image}
-        source={
-          item.cart.product.image_product
-            ? { uri: item.cart.product.image_product }
-            : noImage
-        }
-      />
-      <View style={styles.infoContainer}>
-        <Text style={styles.productName}>{item.cart.product.name_product}</Text>
-        <Text style={styles.status}>Status: {item.status}</Text>
-        <Text style={styles.price}>
-          Price: {item.cart.unit_price * item.cart.qty}
-        </Text>
-        <Text style={styles.qty}>Quantity: {item.cart.qty}</Text>
-        {screen === "SellerTransactionScreen" && (
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.confirmButton}
-              title="Confirm"
-              onPress={() => {
-                handleConfirmTransaction(item.id);
-              }}
-            >
-              <Text style={styles.buttonText}>Confirm</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.declineButton}
-              title="Decline"
-              onPress={() => handleDeclineTransaction(item.id)}
-            >
-              <Text style={styles.buttonText}>Decline</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
+      {item.cart_details.map((cartDetail) => (
+        <React.Fragment key={cartDetail.id}>
+          {cartDetail.product ? (
+            <>
+              <Image
+                style={styles.image}
+                source={
+                  cartDetail.product.image_product
+                    ? { uri: cartDetail.product.image_product }
+                    : noImage
+                }
+              />
+              <View style={styles.infoContainer}>
+                <Text style={styles.productName}>
+                  {cartDetail.product.name_product}
+                </Text>
+                <Text style={styles.status}>Status: {item.status}</Text>
+                <Text style={styles.price}>
+                  Price: {cartDetail.unit_price * cartDetail.qty}
+                </Text>
+                <Text style={styles.qty}>Quantity: {cartDetail.qty}</Text>
+                {screen === "SellerTransactionScreen" && (
+                  <View style={styles.buttonContainer}>
+                    <TouchableOpacity
+                      style={styles.confirmButton}
+                      title="Confirm"
+                      onPress={() => {
+                        handleConfirmTransaction(item.id);
+                      }}
+                    >
+                      <Text style={styles.buttonText}>Confirm</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.declineButton}
+                      title="Decline"
+                      onPress={() => handleDeclineTransaction(item.id)}
+                    >
+                      <Text style={styles.buttonText}>Decline</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            </>
+          ) : (
+            <Text>No Product Details Available</Text>
+          )}
+        </React.Fragment>
+      ))}
     </View>
   );
 

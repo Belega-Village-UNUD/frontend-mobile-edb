@@ -5,7 +5,7 @@ import { COLORS } from "../../constants/theme";
 import styles from "./cart.style";
 import { useNavigation } from "@react-navigation/native";
 
-export default function Cart() {
+export default function Cart({ itemCount }) {
   const navigation = useNavigation();
   return (
     <View>
@@ -18,9 +18,9 @@ export default function Cart() {
           <Ionicons name="cart-outline" size={24} color={COLORS.gray3} />
         </TouchableOpacity>
       </View>
-      <View style={{ alignItems: "flex-end" }}>
+      <View style={styles.cartContainer}>
         <View style={styles.cartCount}>
-          <Text style={styles.cartNumber}>8</Text>
+          <Text style={styles.cartNumber}>{itemCount}</Text>
         </View>
       </View>
     </View>

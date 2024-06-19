@@ -69,6 +69,7 @@ export default function LoginScreen({ navigation }) {
       if (responseData.status == 200) {
         setLoader(false);
         await AsyncStorage.setItem("token", responseData.data.token);
+        await AsyncStorage.setItem("id", responseData.data.payload.id);
         navigation.navigate("Bottom Navigation", { screen: "Home" });
       } else {
         setLoader(false);

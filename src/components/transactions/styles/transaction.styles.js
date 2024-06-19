@@ -15,6 +15,9 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.offwhite,
     ...SHADOWS.small,
   },
+  itemContainerColumn: {
+    flexDirection: "column",
+  },
   image: {
     width: 100,
     height: 100,
@@ -51,7 +54,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   buttonContainer: {
-    flexDirection: "row",
+    flexDirection: "column",
     justifyContent: "space-between",
     marginTop: SIZES.medium,
   },
@@ -61,7 +64,7 @@ const styles = StyleSheet.create({
     borderRadius: SIZES.small,
     flex: 1,
     alignItems: "center",
-    marginRight: SIZES.small,
+    // marginRight: SIZES.small,
   },
   declineButton: {
     backgroundColor: COLORS.red,
@@ -69,7 +72,7 @@ const styles = StyleSheet.create({
     borderRadius: SIZES.small,
     flex: 1,
     alignItems: "center",
-    marginLeft: SIZES.small,
+    // marginLeft: SIZES.small,
   },
   buttonText: {
     color: COLORS.white,

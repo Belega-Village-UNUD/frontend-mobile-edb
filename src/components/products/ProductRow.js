@@ -6,12 +6,10 @@ import {
   Text,
   TouchableOpacity,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { COLORS, SIZES } from "../../constants/theme";
 import ProductCardView from "./ProductCardView";
 import { BASE_URI } from "@env";
 import styles from "./productRow.style";
-import axios from "axios";
 import { useNavigation } from "@react-navigation/native";
 
 const ALL_PRODUCT_URI = BASE_URI + "/api/product/guest/all";
