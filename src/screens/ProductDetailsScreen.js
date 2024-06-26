@@ -20,6 +20,7 @@ const ProductDetailsScreen = ({ navigation, route }) => {
   const [error, setError] = useState(null);
   const [transactionUrl, setTransactionUrl] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [userId, setUserId] = useState(null);
 
   const { id } = route.params;
   const noImage = [require("../assets/no-image.png")];
@@ -143,7 +144,6 @@ const ProductDetailsScreen = ({ navigation, route }) => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${userToken}`,
           },
-          body: JSON.stringify({ product_id: productId }),
         });
         const data = await response.json();
         console.log(data);
@@ -185,7 +185,11 @@ const ProductDetailsScreen = ({ navigation, route }) => {
 
   useEffect(() => {
     handleGetProductDetails();
-    // handleGetProfile();
+    const fetchUserId = async () => {
+      const userId = await AsyncStorage.getItem("id");
+      setUserId(userId);
+    };
+    fetchUserId();
   }, []);
 
   const images = product?.image_product
@@ -268,10 +272,7 @@ const ProductDetailsScreen = ({ navigation, route }) => {
             <Text style={styles.descriptionText}>{product?.desc_product}</Text>
           </ScrollView>
         </View>
-        <View style={styles.cartRow}>
-          {/* <TouchableOpacity onPress={handleBuyPress} style={styles.cartBtn}>
-            <Text style={styles.cartTitle}>Buy Now</Text>
-          </TouchableOpacity> */}
+        {/* <View style={styles.cartRow}>
           <TouchableOpacity
             onPress={product?.stock === 0 ? null : handleBuyPress}
             style={product?.stock === 0 ? styles.soldOutBtn : styles.cartBtn}
@@ -286,6 +287,39 @@ const ProductDetailsScreen = ({ navigation, route }) => {
           <TouchableOpacity onPress={handleChatPress} style={styles.sellerChat}>
             <Fontisto name="whatsapp" size={24} color={COLORS.lightWhite} />
           </TouchableOpacity>
+        </View> */}
+        <View style={styles.cartRow}>
+          {/* Conditional rendering based on user ID comparison */}
+          {product?.user_id !== userId && (
+            <>
+              <TouchableOpacity
+                onPress={product?.stock === 0 ? null : handleBuyPress}
+                style={
+                  product?.stock === 0 ? styles.soldOutBtn : styles.cartBtn
+                }
+              >
+                <Text style={styles.cartTitle}>
+                  {product?.stock === 0 ? "Stock Habis" : "Beli Sekarang"}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleCartPress}
+                style={styles.addCart}
+              >
+                <Fontisto
+                  name="shopping-bag"
+                  size={24}
+                  color={COLORS.lightWhite}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleChatPress}
+                style={styles.sellerChat}
+              >
+                <Fontisto name="whatsapp" size={24} color={COLORS.lightWhite} />
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       </View>
     </View>

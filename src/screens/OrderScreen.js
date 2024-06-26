@@ -30,7 +30,11 @@ export const handleGetAllOrders = async () => {
 
     if (response.status === 200) {
       console.log("Fetched orders successfully");
-      return data.data;
+      // Sort data by createdAt in descending order
+      const sortedData = data.data.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+      return sortedData;
     } else {
       console.log("Failed to fetch orders");
     }

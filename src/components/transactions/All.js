@@ -16,6 +16,7 @@ import { RadioButton } from "react-native-paper";
 import styles from "./styles/transaction.styles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import WebView from "react-native-webview";
+import { useNavigation } from "@react-navigation/native";
 
 const CONFIRM_URI = `${BASE_URI}/api/transaction/confirm/`;
 const DECLINE_URI = `${BASE_URI}/api/transaction/decline/`;
@@ -391,7 +392,6 @@ const All = ({ transactions, handleGetAllTransactions, screen }) => {
                 setRedirectLink(null);
                 handlePaymentSuccess(selectedTransaction);
               }, 2000);
-              refreshing(true);
             }
           }}
         />

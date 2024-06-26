@@ -2,7 +2,6 @@ import { BASE_URI } from "@env";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
-import axios from "axios";
 import { StatusBar } from "expo-status-bar";
 import { Formik } from "formik";
 import React, { useState } from "react";
@@ -11,10 +10,12 @@ import * as Yup from "yup";
 import { Button } from "../components";
 import { COLORS } from "../constants/theme";
 import styles from "./styles/profile.style";
+import { Picker } from "@react-native-picker/picker";
 
 const PROFILE_URI = BASE_URI + "/api/profiles";
+const PROVINCE_URI = BASE_URI + "/api/shipping/province";
+const CITY_URI = BASE_URI + "/api/shipping/city";
 const DEFAULT_AVATAR = require("../assets/images/userDefault.png");
-
 const validationSchema = Yup.object().shape({
   userName: Yup.string().matches(
     /^[a-zA-Z\s]*$/,
@@ -36,6 +37,10 @@ export default function EditProfileScreen({ navigation }) {
   const [userPhone, setUserPhone] = useState("");
   const [userImage, setUserImage] = useState(null);
   const [userAddress, setUserAddress] = useState("");
+  const [userProvince, setUserProvince] = useState("");
+  const [userCity, setUserCity] = useState("");
+  const [provinces, setProvinces] = useState([]);
+  const [cities, setCities] = useState([]);
 
   const inValidForm = () => {
     Alert.alert(
@@ -67,6 +72,8 @@ export default function EditProfileScreen({ navigation }) {
         setUserPhone(responseData.data.profile.phone);
         setUserImage(responseData.data.profile.avatar_link);
         setUserAddress(responseData.data.profile.address);
+        setUserProvince(responseData.data.profile.province.province);
+        setUserCity(responseData.data.profile.city.city_name);
       }
     } catch (error) {
       console.error(error.message);
@@ -81,6 +88,7 @@ export default function EditProfileScreen({ navigation }) {
         name: values.userName || userName,
         phone: values.userPhone || userPhone,
         address: values.userAddress || userAddress,
+        city_id: userCity,
       };
       const response = await fetch(PROFILE_URI, {
         method: "PUT",
@@ -103,9 +111,52 @@ export default function EditProfileScreen({ navigation }) {
     }
   };
 
+  const handleGetProvince = async () => {
+    let token = await AsyncStorage.getItem("token");
+    try {
+      const response = await fetch(PROVINCE_URI, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        console.log(`Failed to fetch provinces: ${response.status}`);
+        return;
+      } else {
+        const responseData = await response.json();
+        setProvinces(responseData.data); // Update to set the provinces list
+      }
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
+
+  const handleGetCity = async (provinceId) => {
+    let token = await AsyncStorage.getItem("token");
+    try {
+      const response = await fetch(`${CITY_URI}?province_id=${provinceId}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        console.log(`Failed to fetch cities: ${response.status}`);
+        return;
+      } else {
+        const responseData = await response.json();
+        setCities(responseData.data); // Update to set the cities list
+      }
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
+
   useFocusEffect(
     React.useCallback(() => {
       handleGetProfile();
+      handleGetProvince();
     }, [])
   );
 
@@ -244,6 +295,52 @@ export default function EditProfileScreen({ navigation }) {
                 {touched.userAddress && errors.userAddress && (
                   <Text style={styles.errorMessage}>{errors.userAddress}</Text>
                 )}
+              </View>
+
+              <View style={{ marginHorizontal: 20, marginTop: 20 }}>
+                <View style={styles.inputWrapper}>
+                  <Picker
+                    selectedValue={userProvince}
+                    onValueChange={(itemValue, itemIndex) => {
+                      setUserProvince(itemValue);
+                      handleGetCity(itemValue);
+                    }}
+                  >
+                    {/* Placeholder for Province Picker */}
+                    <Picker.Item
+                      label={userProvince ? userProvince : "Provinsi Asal"}
+                      value={undefined}
+                    />
+                    {provinces.map((province) => (
+                      <Picker.Item
+                        key={province.province_id}
+                        label={province.province}
+                        value={province.province_id}
+                      />
+                    ))}
+                  </Picker>
+                </View>
+              </View>
+              <View style={{ marginHorizontal: 20, marginTop: 20 }}>
+                <Picker
+                  selectedValue={userCity}
+                  onValueChange={(itemValue, itemIndex) =>
+                    setUserCity(itemValue)
+                  }
+                >
+                  {/* Placeholder for City Picker */}
+                  <Picker.Item
+                    label={userCity ? userCity : "Kota asal"}
+                    value={undefined}
+                  />
+                  {cities.map((city) => (
+                    <Picker.Item
+                      key={city.city_id}
+                      label={city.city_name}
+                      value={city.city_id}
+                    />
+                  ))}
+                </Picker>
               </View>
               <View style={{ marginTop: 20, marginHorizontal: 20 }}>
                 <Button
