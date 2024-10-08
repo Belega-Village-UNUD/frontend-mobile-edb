@@ -1,5 +1,5 @@
 import { BASE_URI } from "@env";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,11 +9,14 @@ import {
   Modal,
   Alert,
   TextInput,
+  RefreshControl,
+  BackHandler,
 } from "react-native";
 import { RadioButton } from "react-native-paper";
 import styles from "./styles/transaction.styles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import WebView from "react-native-webview";
+import { useNavigation } from "@react-navigation/native";
 
 const CANCEL_URI = `${BASE_URI}/api/transaction/buyer/cancel/`;
 const noImage = require("../../assets/no-image-card.png");
@@ -24,11 +27,51 @@ const Confirmed = ({ transactions, handleGetAllTransactions, screen }) => {
   const [cancelReason, setCancelReason] = useState("");
   const [selectedReason, setSelectedReason] = useState("price");
   const [selectedTransaction, setSelectedTransaction] = useState(null);
-  const [redirectUrl, setRedirectUrl] = useState(null);
+  const [redirectLink, setRedirectLink] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    setTransaction(transactions);
+  }, [transactions]);
+
+  useEffect(() => {
+    const backAction = () => {
+      if (modalVisible) {
+        setModalVisible(false);
+        return true;
+      }
+      if (redirectLink) {
+        setRedirectLink(null);
+        return true;
+      }
+      return false;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, [modalVisible, redirectLink]);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    handleGetAllTransactions().then(() => setRefreshing(false));
+  }, []);
 
   const confirmedTransactions = transactions
     ? transactions.filter((transaction) => transaction.status === "PAYABLE")
     : [];
+
+  const navigateToOrderDetailsScreen = (orderId) => {
+    navigation.navigate("OrderDetail", { orderId });
+  };
+
+  const navigateToTransactionDetailsScreen = (transactionId) => {
+    navigation.navigate("TransactionDetail", { transactionId });
+  };
 
   const handlePayTransaction = async (transactionId) => {
     try {
@@ -41,7 +84,7 @@ const Confirmed = ({ transactions, handleGetAllTransactions, screen }) => {
       );
 
       if (transactionToPay && transactionToPay.redirect_url) {
-        setRedirectUrl(transactionToPay.redirect_url);
+        setRedirectLink(transactionToPay.redirect_url);
       }
     } catch (error) {
       console.error(error);
@@ -108,155 +151,196 @@ const Confirmed = ({ transactions, handleGetAllTransactions, screen }) => {
     setModalVisible(true);
   };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.itemContainer}>
-      {item.cart_details.map((cartDetail) => (
-        <React.Fragment key={cartDetail.id}>
-          {cartDetail.product ? (
-            <>
-              <Image
-                style={styles.image}
-                source={
-                  cartDetail.product.image_product
-                    ? { uri: cartDetail.product.image_product }
-                    : noImage
-                }
-              />
-              <View style={styles.infoContainer}>
-                <Text style={styles.productName}>
-                  {cartDetail.product.name_product}
-                </Text>
-                <Text style={styles.status}>Status: {item.status}</Text>
-                <Text style={styles.price}>
-                  Price: {cartDetail.unit_price * cartDetail.qty}
-                </Text>
-                <Text style={styles.qty}>Quantity: {cartDetail.qty}</Text>
-                {screen === "OrderScreen" && (
-                  <View style={styles.buttonContainer}>
-                    <TouchableOpacity
-                      style={styles.confirmButton}
-                      title="Pay"
-                      onPress={() => {
-                        handlePayTransaction(item.id);
-                      }}
-                    >
-                      <Text style={styles.buttonText}>Pay</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.declineButton}
-                      title="Cancel"
-                      onPress={() => openCancelModal(item.id)}
-                    >
-                      <Text style={styles.buttonText}>Cancel</Text>
-                    </TouchableOpacity>
+  const renderItem = ({ item }) => {
+    const hasMultipleProducts =
+      item.cart_details.filter((cartDetail) => cartDetail.product).length > 1;
+
+    return (
+      <TouchableOpacity
+        onPress={() => {
+          if (screen === "SellerTransactionScreen") {
+            navigateToTransactionDetailsScreen(item.id);
+          } else {
+            navigateToOrderDetailsScreen(item.id);
+          }
+        }}
+      >
+        <View
+          style={[
+            styles.itemContainer,
+            item.cart_details.length > 1 && styles.itemContainerColumn,
+          ]}
+        >
+          {item.cart_details.map((cartDetail) => (
+            <React.Fragment key={cartDetail.id}>
+              {cartDetail.product && (
+                <>
+                  <Image
+                    style={styles.image}
+                    source={
+                      cartDetail.product.images &&
+                      cartDetail.product.images.length > 0
+                        ? { uri: cartDetail.product.images[0] }
+                        : noImage
+                    }
+                  />
+                  <View style={styles.infoContainer}>
+                    <Text style={styles.productName}>
+                      {cartDetail.product.name_product}
+                    </Text>
+                    <Text style={styles.status}>Status: {item.status}</Text>
+                    <Text style={styles.qty}>Quantity: {cartDetail.qty}</Text>
+                    {!hasMultipleProducts && (
+                      <Text style={styles.price}>
+                        Price: {item.total_amount}
+                      </Text>
+                    )}
                   </View>
-                )}
-              </View>
-            </>
-          ) : (
-            <Text>No product details available</Text>
+                </>
+              )}
+            </React.Fragment>
+          ))}
+          {hasMultipleProducts && (
+            <View style={styles.totalAmountContainer}>
+              <Text style={styles.totalAmount}>
+                Total Amount: {item.total_amount}
+              </Text>
+            </View>
           )}
-        </React.Fragment>
-      ))}
-    </View>
-  );
+          {screen === "OrderScreen" && (
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={styles.confirmButton}
+                title="Pay"
+                onPress={() => {
+                  handlePayTransaction(item.id);
+                }}
+              >
+                <Text style={styles.buttonText}>Pay</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.declineButton}
+                title="Cancel"
+                onPress={() => openCancelModal(item.id)}
+              >
+                <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.container}>
-      {redirectUrl ? (
-        <WebView source={{ uri: redirectUrl }} />
-      ) : (
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={() => {
-            setModalVisible(!modalVisible);
+      {redirectLink ? (
+        <WebView
+          source={{ uri: redirectLink }}
+          style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0 }}
+          onNavigationStateChange={(navState) => {
+            const url = navState.url;
+            // Check if the URL ends with '#/409'
+            if (
+              url.endsWith("#/409") ||
+              url.endsWith("#/success") ||
+              url.endsWith("#/407")
+            ) {
+              // Redirect back to your app
+              setTimeout(() => {
+                setRedirectLink(null);
+                handlePaymentSuccess(selectedTransaction);
+              }, 2000);
+            }
           }}
-        >
-          <View style={styles.centeredView}>
-            <View style={styles.modalView}>
-              <Text style={styles.modalText}>Pilih alasan pembatalan:</Text>
-              <RadioButton.Group
-                onValueChange={(newValue) => {
-                  setSelectedReason(newValue);
-                }}
-                value={selectedReason}
-              >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "flex-start",
-                    alignItems: "center",
-                  }}
-                >
-                  <RadioButton value="price" />
-                  <Text style={{ marginRight: 10 }}>Harga Terlalu Mahal</Text>
-                </View>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "flex-start",
-                    alignItems: "center",
-                  }}
-                >
-                  <RadioButton value="change" />
-                  <Text style={{ marginRight: 10 }}>Berubah Pikiran</Text>
-                </View>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "flex-start",
-                    alignItems: "center",
-                  }}
-                >
-                  <RadioButton value="other" />
-                  <Text style={{ marginRight: 10 }}>Lainnya</Text>
-                </View>
-              </RadioButton.Group>
-              {selectedReason === "other" && (
-                <TextInput
-                  style={styles.modalInput}
-                  onChangeText={setCancelReason}
-                  value={cancelReason}
-                  placeholder="Masukkan alasan pembatalan"
-                />
-              )}
-              <View style={styles.modalButtonContainer}>
-                <TouchableOpacity
-                  style={styles.modalButton}
-                  title="Submit"
-                  onPress={() => {
-                    handleCancelTransaction(selectedTransaction);
-                  }}
-                >
-                  <Text style={styles.modalButtonText}>Submit</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.modalButtonClose}
-                  title="Close"
-                  onPress={() => setModalVisible(false)}
-                >
-                  <Text style={styles.modalButtonText}>Close</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
-      )}
-      {confirmedTransactions.length > 0 ? (
+        />
+      ) : (
         <FlatList
           data={confirmedTransactions}
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
         />
-      ) : (
-        <View style={styles.messageContainer}>
-          <Text style={styles.message}>
-            Belum ada transaksi yang dikonfirmasi oleh anda
-          </Text>
-        </View>
       )}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          setModalVisible(!modalVisible);
+        }}
+      >
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalText}>Pilih alasan pembatalan:</Text>
+            <RadioButton.Group
+              onValueChange={(newValue) => {
+                setSelectedReason(newValue);
+              }}
+              value={selectedReason}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "flex-start",
+                  alignItems: "center",
+                }}
+              >
+                <RadioButton value="price" />
+                <Text style={{ marginRight: 10 }}>Harga Terlalu Mahal</Text>
+              </View>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "flex-start",
+                  alignItems: "center",
+                }}
+              >
+                <RadioButton value="change" />
+                <Text style={{ marginRight: 10 }}>Berubah Pikiran</Text>
+              </View>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "flex-start",
+                  alignItems: "center",
+                }}
+              >
+                <RadioButton value="other" />
+                <Text style={{ marginRight: 10 }}>Lainnya</Text>
+              </View>
+            </RadioButton.Group>
+            {selectedReason === "other" && (
+              <TextInput
+                style={styles.modalInput}
+                onChangeText={setCancelReason}
+                value={cancelReason}
+                placeholder="Masukkan alasan pembatalan"
+              />
+            )}
+            <View style={styles.modalButtonContainer}>
+              <TouchableOpacity
+                style={styles.modalButton}
+                title="Submit"
+                onPress={() => {
+                  handleCancelTransaction(selectedTransaction);
+                }}
+              >
+                <Text style={styles.modalButtonText}>Submit</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalButtonClose}
+                title="Close"
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={styles.modalButtonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
