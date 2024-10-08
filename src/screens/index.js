@@ -15,6 +15,9 @@ import SearchScreen from "./SearchScreen";
 import SignupScreen from "./SignupScreen";
 import SellerTransactionScreen from "./SellerTransactionScreen";
 import OrderScreen from "./OrderScreen";
+import TransactionDetailScreen from "./TransactionDetailScreen";
+import OrderDetailScreen from "./OrderDetailScreen";
+import CalculationShippingScreen from "./CalculationShippingScreen";
 
 export {
   CartScreen,
@@ -34,4 +37,7 @@ export {
   ProductDetailsScreen,
   SellerTransactionScreen,
   OrderScreen,
+  TransactionDetailScreen,
+  OrderDetailScreen,
+  CalculationShippingScreen,
 };

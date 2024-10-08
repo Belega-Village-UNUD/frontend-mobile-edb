@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   Alert,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import styles from "./styles/transaction.styles";
 
 const CONFIRM_URI = `${BASE_URI}/api/transaction/confirm/`;
@@ -20,6 +21,16 @@ const Pending = ({ transactions, handleGetAllTransactions, screen }) => {
   const pendingTransactions = transactions
     ? transactions.filter((transaction) => transaction.status === "PENDING")
     : [];
+
+  const navigation = useNavigation();
+
+  const navigateToOrderDetailsScreen = (orderId) => {
+    navigation.navigate("OrderDetail", { orderId });
+  };
+
+  const navigateToTransactionDetailsScreen = (transactionId) => {
+    navigation.navigate("TransactionDetail", { transactionId });
+  };
 
   useEffect(() => {
     setTransaction(transactions);
@@ -110,58 +121,82 @@ const Pending = ({ transactions, handleGetAllTransactions, screen }) => {
     }
   };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.itemContainer}>
-      {item.cart_details.map((cartDetail) => (
-        <React.Fragment key={cartDetail.id}>
-          {cartDetail.product ? (
-            <>
-              <Image
-                style={styles.image}
-                source={
-                  cartDetail.product.image_product
-                    ? { uri: cartDetail.product.image_product }
-                    : noImage
-                }
-              />
-              <View style={styles.infoContainer}>
-                <Text style={styles.productName}>
-                  {cartDetail.product.name_product}
-                </Text>
-                <Text style={styles.status}>Status: {item.status}</Text>
-                <Text style={styles.price}>
-                  Price: {cartDetail.unit_price * cartDetail.qty}
-                </Text>
-                <Text style={styles.qty}>Quantity: {cartDetail.qty}</Text>
-                {screen === "SellerTransactionScreen" && (
-                  <View style={styles.buttonContainer}>
-                    <TouchableOpacity
-                      style={styles.confirmButton}
-                      title="Confirm"
-                      onPress={() => {
-                        handleConfirmTransaction(item.id);
-                      }}
-                    >
-                      <Text style={styles.buttonText}>Confirm</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.declineButton}
-                      title="Decline"
-                      onPress={() => handleDeclineTransaction(item.id)}
-                    >
-                      <Text style={styles.buttonText}>Decline</Text>
-                    </TouchableOpacity>
-                  </View>
+  const renderItem = ({ item }) => {
+    // Check if there are any cart details with a product
+    if (
+      item.cart_details.filter((cartDetail) => cartDetail.product).length > 0
+    ) {
+      return (
+        <TouchableOpacity
+          onPress={() => {
+            if (screen === "SellerTransactionScreen") {
+              navigateToTransactionDetailsScreen(item.id);
+            } else {
+              navigateToOrderDetailsScreen(item.id);
+            }
+          }}
+        >
+          <View
+            style={[
+              styles.itemContainer,
+              item.cart_details.length > 1 && styles.itemContainerColumn,
+            ]}
+          >
+            {item.cart_details.map((cartDetail) => (
+              <React.Fragment key={cartDetail.id}>
+                {cartDetail.product && (
+                  <>
+                    <Image
+                      style={styles.image}
+                      source={
+                        cartDetail.product.images &&
+                        cartDetail.product.images.length > 0
+                          ? { uri: cartDetail.product.images[0] }
+                          : noImage
+                      }
+                    />
+                    <View style={styles.infoContainer}>
+                      <Text style={styles.productName}>
+                        {cartDetail.product.name_product}
+                      </Text>
+                      <Text style={styles.status}>Status: {item.status}</Text>
+                      <Text style={styles.price}>
+                        Price: {item.total_amount}
+                      </Text>
+                      <Text style={styles.qty}>Quantity: {cartDetail.qty}</Text>
+                    </View>
+                  </>
                 )}
+              </React.Fragment>
+            ))}
+            {screen === "SellerTransactionScreen" && (
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={styles.confirmButton}
+                  title="Confirm"
+                  onPress={() => {
+                    handleConfirmTransaction(item.id);
+                  }}
+                >
+                  <Text style={styles.buttonText}>Confirm</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.declineButton}
+                  title="Decline"
+                  onPress={() => handleDeclineTransaction(item.id)}
+                >
+                  <Text style={styles.buttonText}>Decline</Text>
+                </TouchableOpacity>
               </View>
-            </>
-          ) : (
-            <Text>No Product Details Available</Text>
-          )}
-        </React.Fragment>
-      ))}
-    </View>
-  );
+            )}
+          </View>
+        </TouchableOpacity>
+      );
+    } else {
+      // Optionally, return null or a placeholder if there are no products
+      return null;
+    }
+  };
 
   return (
     <View style={styles.container}>

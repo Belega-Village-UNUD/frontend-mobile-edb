@@ -18,12 +18,18 @@ import {
 import CheckBox from "expo-checkbox";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CartContext } from "../provider/CartProvider";
+import { useNavigation } from "@react-navigation/native";
+
 const GET_CART_URI = `${BASE_URI}/api/cart`;
 const UPDATE_CART_URI = `${BASE_URI}/api/cart`;
 const DELETE_CART_URI = `${BASE_URI}/api/cart`;
+const CHECKOUT_URI = `${BASE_URI}/api/cart/checkout`;
 
 export default function CartScreen() {
   // const [cartData, setCartData] = useState([]);
+  const navigation = useNavigation();
+  const [isAnyItemCheckedForCheckout, setIsAnyItemCheckedForCheckout] =
+    useState(false);
   const { cartData, setCartData } = useContext(CartContext);
   const [modalVisible, setModalVisible] = useState(false);
   const [currentQty, setCurrentQty] = useState(0);
@@ -112,34 +118,94 @@ export default function CartScreen() {
   }, []);
 
   const handleStoreCheck = (storeId) => {
-    setCartData(
-      cartData.map((store) => {
-        if (store.store.id === storeId) {
-          const newCarts = store.carts.map((cart) => ({
-            ...cart,
-            is_checkout: !store.is_checkout,
-          }));
-          return { ...store, carts: newCarts, is_checkout: !store.is_checkout };
-        }
-        return store;
-      })
+    let isAnyChecked = false;
+    const updatedCartData = cartData.map((store) => {
+      if (store.store.id === storeId) {
+        const newCarts = store.carts.map((cart) => {
+          const newCart = { ...cart, is_checkout: !store.is_checkout };
+          if (newCart.is_checkout) isAnyChecked = true;
+          return newCart;
+        });
+        return { ...store, carts: newCarts, is_checkout: !store.is_checkout };
+      }
+      return store;
+    });
+    setCartData(updatedCartData);
+    setIsAnyItemCheckedForCheckout(
+      isAnyChecked ||
+        updatedCartData.some(
+          (store) =>
+            store.is_checkout || store.carts.some((cart) => cart.is_checkout)
+        )
     );
   };
 
+  const handleCheckout = async () => {
+    const token = await AsyncStorage.getItem("token");
+    try {
+      const checkoutItems = cartData.flatMap((store) =>
+        store.carts
+          .filter((cart) => cart.is_checkout)
+          .map((cart) => ({ cart_id: cart.id }))
+      );
+
+      // Check if there are items selected for checkout
+      if (checkoutItems.length === 0) {
+        Alert.alert("No items selected for checkout");
+        return;
+      }
+
+      const response = await fetch(CHECKOUT_URI, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(checkoutItems), // Sending array of objects with cart_id
+      });
+
+      const data = await response.json();
+      console.log("Checkout API Response:", data);
+
+      if (response.status === 200 && data.success) {
+        Alert.alert("Checkout berhasil", "Pesanan berhasil diproses", [
+          {
+            text: "OK",
+            onPress: () => {},
+          },
+        ]);
+      } else {
+        Alert.alert("Checkout error", data.message);
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Checkout error", "An error occurred during checkout.");
+    }
+  };
+
   const handleProductCheck = (storeId, productId) => {
-    setCartData(
-      cartData.map((store) => {
-        if (store.store.id === storeId) {
-          const newCarts = store.carts.map((cart) => {
-            if (cart.id === productId) {
-              return { ...cart, is_checkout: !cart.is_checkout };
-            }
-            return cart;
-          });
-          return { ...store, carts: newCarts };
-        }
-        return store;
-      })
+    let isAnyChecked = false;
+    const updatedCartData = cartData.map((store) => {
+      if (store.store.id === storeId) {
+        const newCarts = store.carts.map((cart) => {
+          if (cart.id === productId) {
+            const newCart = { ...cart, is_checkout: !cart.is_checkout };
+            if (newCart.is_checkout) isAnyChecked = true;
+            return newCart;
+          }
+          return cart;
+        });
+        return { ...store, carts: newCarts };
+      }
+      return store;
+    });
+    setCartData(updatedCartData);
+    setIsAnyItemCheckedForCheckout(
+      isAnyChecked ||
+        updatedCartData.some(
+          (store) =>
+            store.is_checkout || store.carts.some((cart) => cart.is_checkout)
+        )
     );
   };
 
@@ -153,7 +219,12 @@ export default function CartScreen() {
       <View style={styles.productDetails}>
         <Text style={styles.productName}>{item.name_product}</Text>
         <View style={styles.productInfo}>
-          <Text style={styles.productPrice}>{item.price * item.qty}</Text>
+          <Text style={styles.productPrice}>
+            {new Intl.NumberFormat("id-ID", {
+              style: "currency",
+              currency: "IDR",
+            }).format(item.price * item.qty)}
+          </Text>
           <View style={styles.qtyContainer}>
             <Text style={styles.productQty}>{item.qty}</Text>
             <TouchableOpacity
@@ -163,7 +234,12 @@ export default function CartScreen() {
                 setModalVisible(true);
               }}
             >
-              <Ionicons name="create-outline" size={24} color="green" />
+              <Ionicons
+                name="create-outline"
+                size={24}
+                color="green"
+                style={{ paddingBottom: 5 }}
+              />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => {
@@ -173,7 +249,12 @@ export default function CartScreen() {
                 ]);
               }}
             >
-              <Ionicons name="trash-outline" size={24} color="red" />
+              <Ionicons
+                name="trash-outline"
+                size={24}
+                color="red"
+                style={{ paddingBottom: 5 }}
+              />
             </TouchableOpacity>
           </View>
         </View>
@@ -209,6 +290,13 @@ export default function CartScreen() {
         renderItem={renderStore}
         keyExtractor={(store) => store.store.id}
       />
+      {isAnyItemCheckedForCheckout && (
+        <View style={styles.checkoutButtonContainer}>
+          <TouchableOpacity style={styles.buttonStyle} onPress={handleCheckout}>
+            <Text style={styles.buttonText}>Proses</Text>
+          </TouchableOpacity>
+        </View>
+      )}
       <Modal
         animationType="slide"
         transparent={true}
@@ -239,6 +327,12 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: "#f5f5f5",
+  },
+  buttonStyle: {
+    backgroundColor: "#53B175",
+    padding: 10,
+    borderRadius: 10,
+    alignItems: "center",
   },
   title: {
     fontSize: 28,
@@ -304,6 +398,8 @@ const styles = StyleSheet.create({
   productQty: {
     fontSize: 16,
     color: "#666",
+    paddingLeft: 10,
+    paddingBottom: 5,
   },
   qtyContainer: {
     flexDirection: "row",
@@ -343,5 +439,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 15,
     textAlign: "center",
+  },
+  checkoutButtonContainer: {
+    marginVertical: 20, // Adjust the margin as needed
+    paddingHorizontal: 10, // Adjust padding as needed
   },
 });

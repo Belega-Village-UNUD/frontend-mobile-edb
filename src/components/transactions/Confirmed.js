@@ -91,6 +91,30 @@ const Confirmed = ({ transactions, handleGetAllTransactions, screen }) => {
     }
   };
 
+  const handlePaymentSuccess = async () => {
+    try {
+      let token = await AsyncStorage.getItem("token");
+      const response = await fetch(
+        `${BASE_URI}/api/transaction/buyer/${paymentTransactionId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("HTTP status " + response.status);
+      }
+
+      const data = await response.json();
+    } catch (error) {
+      console.log("Failed to update transaction status", error);
+    }
+  };
+
   const handleCancelTransaction = async (transactionId) => {
     let reason;
     if (selectedReason === "other") {

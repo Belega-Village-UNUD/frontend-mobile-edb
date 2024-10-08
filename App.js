@@ -8,12 +8,16 @@ import AuthNavigation from "./src/navigation/AuthNavigation";
 import BottomTabNavigation from "./src/navigation/BottomTabNavigation";
 import ProfileNavigation from "./src/navigation/ProfileNavigation";
 import SplashNavigation from "./src/navigation/SplashNavigation";
+import { LogBox } from "react-native";
 import {
   CartScreen,
   ProductDetailsScreen,
   ProductScreen,
   SellerTransactionScreen,
   OrderScreen,
+  TransactionDetailScreen,
+  OrderDetailScreen,
+  CalculationShippingScreen,
 } from "./src/screens";
 
 const Stack = createNativeStackNavigator();
@@ -28,6 +32,9 @@ export default function App() {
     semibold: require("./src/assets/fonts/Poppins-SemiBold.ttf"),
   });
 
+  LogBox.ignoreLogs([
+    "ViewPropTypes will be removed from React Native, along with all other PropTypes. We recommend that you migrate away from PropTypes and switch to a type system like TypeScript. If you need to continue using ViewPropTypes, migrate to the 'deprecated-react-native-prop-types' package.",
+  ]);
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded) {
       await SplashScreen.hideAsync();
@@ -59,6 +66,15 @@ export default function App() {
           <Stack.Screen
             name="TransactionNav"
             component={SellerTransactionScreen}
+          />
+          <Stack.Screen
+            name="TransactionDetail"
+            component={TransactionDetailScreen}
+          />
+          <Stack.Screen name="OrderDetail" component={OrderDetailScreen} />
+          <Stack.Screen
+            name="CalculationShipping"
+            component={CalculationShippingScreen}
           />
         </Stack.Navigator>
       </NavigationContainer>

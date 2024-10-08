@@ -192,11 +192,12 @@ const ProductDetailsScreen = ({ navigation, route }) => {
     fetchUserId();
   }, []);
 
-  const images = product?.image_product
-    ? Array.isArray(product?.image_product)
-      ? product?.image_product
-      : [product?.image_product]
-    : noImage;
+  // const images = product?.image_product
+  //   ? Array.isArray(product?.image_product)
+  //     ? product?.image_product
+  //     : [product?.image_product]
+  //   : noImage;
+  const images = product?.images?.length ? product.images : noImage;
 
   return (
     <View style={styles.container}>
