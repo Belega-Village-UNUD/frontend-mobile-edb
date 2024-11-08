@@ -1,7 +1,12 @@
 import { COLORS } from '../constants/theme';
-import { Text, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+    Text,
+    StyleSheet,
+    TouchableOpacity,
+    ActivityIndicator,
+} from 'react-native';
 
-export default function Button({ title, onPress, isValid }) {
+export default function Button({ title, onPress, isValid, loader = false }) {
     return (
         <TouchableOpacity
             onPress={onPress}
@@ -9,7 +14,11 @@ export default function Button({ title, onPress, isValid }) {
                 isValid === false ? COLORS.gray3 : COLORS.primary
             )}
         >
-            <Text style={styles.btnText}>{title}</Text>
+            {loader === false ? (
+                <Text style={styles.btnText}>{title}</Text>
+            ) : (
+                <ActivityIndicator size='small' color={COLORS.white} />
+            )}
         </TouchableOpacity>
     );
 }

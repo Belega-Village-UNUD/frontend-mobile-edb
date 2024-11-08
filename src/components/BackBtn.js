@@ -1,7 +1,6 @@
-import { TouchableOpacity } from 'react-native';
+import { TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SIZES } from '../constants/theme';
-import { StyleSheet } from 'react-native';
 
 export default function BackBtn({ onPress }) {
     return (
