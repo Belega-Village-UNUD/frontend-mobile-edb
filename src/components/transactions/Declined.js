@@ -1,16 +1,34 @@
-import React from "react";
-import { View, Text, Image, FlatList, TouchableOpacity } from "react-native";
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  Image,
+  FlatList,
+  TouchableOpacity,
+  RefreshControl,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import styles from "./styles/transaction.styles";
 
 const noImage = require("../../assets/no-image-card.png");
 
-const Declined = ({ transactions, screen }) => {
-  const declinedTransactions = transactions
-    ? transactions.filter((transaction) => transaction.status === "CANCEL")
-    : [];
+const Declined = ({ transactions, handleGetAllTransactions, screen }) => {
+  const [refreshing, setRefreshing] = useState(false);
+  const [declinedTransactions, setDeclinedTransactions] = useState([]);
 
   const navigation = useNavigation();
+
+  useEffect(() => {
+    const filteredTransactions = transactions
+      ? transactions.filter((transaction) => transaction.status === "CANCEL")
+      : [];
+    setDeclinedTransactions(filteredTransactions);
+  }, [transactions]);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    handleGetAllTransactions().then(() => setRefreshing(false));
+  }, []);
 
   const navigateToOrderDetailsScreen = (orderId) => {
     navigation.navigate("OrderDetail", { orderId });
@@ -25,6 +43,8 @@ const Declined = ({ transactions, screen }) => {
     if (
       item.cart_details.filter((cartDetail) => cartDetail.product).length > 0
     ) {
+      const isMultipleProducts = item.cart_details.length > 1;
+
       return (
         <TouchableOpacity
           onPress={() => {
@@ -34,15 +54,16 @@ const Declined = ({ transactions, screen }) => {
               navigateToOrderDetailsScreen(item.id);
             }
           }}
+          delayPressIn={5000}
         >
           <View
             style={[
               styles.itemContainer,
-              item.cart_details.length > 1 && styles.itemContainerColumn,
+              isMultipleProducts && styles.itemContainerColumn,
             ]}
           >
-            {item.cart_details.map((cartDetail) => (
-              <React.Fragment key={cartDetail.id}>
+            {item.cart_details.map((cartDetail, index) => (
+              <View key={cartDetail.id} style={styles.productContainer}>
                 {cartDetail.product && (
                   <>
                     <Image
@@ -59,15 +80,27 @@ const Declined = ({ transactions, screen }) => {
                         {cartDetail.product.name_product}
                       </Text>
                       <Text style={styles.status}>Status: {item.status}</Text>
-                      <Text style={styles.price}>
-                        Price: {item.total_amount}
+                      <Text style={styles.shippingStatus}>
+                        Shipping Status:{" "}
+                        {cartDetail.arrival_shipping_status === "UNCONFIRMED"
+                          ? "Belum Dikirim"
+                          : cartDetail.arrival_shipping_status === "PACKING"
+                          ? "Disiapkan"
+                          : cartDetail.arrival_shipping_status === "SHIPPED"
+                          ? "Dikirim"
+                          : cartDetail.arrival_shipping_status === "ARRIVED"
+                          ? "Sampai"
+                          : "Belum Dikirim"}
                       </Text>
                       <Text style={styles.qty}>Quantity: {cartDetail.qty}</Text>
                     </View>
                   </>
                 )}
-              </React.Fragment>
+              </View>
             ))}
+            <Text style={[styles.price, styles.centerText]}>
+              Total Price: {item.total_amount}
+            </Text>
           </View>
         </TouchableOpacity>
       );
@@ -84,6 +117,9 @@ const Declined = ({ transactions, screen }) => {
           data={declinedTransactions}
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
         />
       ) : (
         <View style={styles.messageContainer}>

@@ -8,6 +8,7 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
+  RefreshControl,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import styles from "./styles/transaction.styles";
@@ -18,6 +19,7 @@ const noImage = require("../../assets/no-image-card.png");
 
 const Pending = ({ transactions, handleGetAllTransactions, screen }) => {
   const [transaction, setTransaction] = useState(transactions);
+  const [refreshing, setRefreshing] = useState(false);
   const pendingTransactions = transactions
     ? transactions.filter((transaction) => transaction.status === "PENDING")
     : [];
@@ -36,6 +38,11 @@ const Pending = ({ transactions, handleGetAllTransactions, screen }) => {
     setTransaction(transactions);
   }, [transactions]);
 
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    handleGetAllTransactions().then(() => setRefreshing(false));
+  }, []);
+
   const handleConfirmTransaction = async (transactionId) => {
     try {
       let token = await AsyncStorage.getItem("token");
@@ -49,8 +56,6 @@ const Pending = ({ transactions, handleGetAllTransactions, screen }) => {
 
       const data = await response.json();
 
-      console.log("47: This is the data.redirect_url", data.data.redirect_url);
-      console.log(data.data);
       if (data.success) {
         const updatedTransactions = transactions.map((item) => {
           if (item.id === transactionId) {
@@ -126,6 +131,8 @@ const Pending = ({ transactions, handleGetAllTransactions, screen }) => {
     if (
       item.cart_details.filter((cartDetail) => cartDetail.product).length > 0
     ) {
+      const isMultipleProducts = item.cart_details.length > 1;
+
       return (
         <TouchableOpacity
           onPress={() => {
@@ -135,15 +142,16 @@ const Pending = ({ transactions, handleGetAllTransactions, screen }) => {
               navigateToOrderDetailsScreen(item.id);
             }
           }}
+          delayPressIn={5000}
         >
           <View
             style={[
               styles.itemContainer,
-              item.cart_details.length > 1 && styles.itemContainerColumn,
+              isMultipleProducts && styles.itemContainerColumn,
             ]}
           >
             {item.cart_details.map((cartDetail) => (
-              <React.Fragment key={cartDetail.id}>
+              <View key={cartDetail.id} style={styles.productContainer}>
                 {cartDetail.product && (
                   <>
                     <Image
@@ -160,15 +168,27 @@ const Pending = ({ transactions, handleGetAllTransactions, screen }) => {
                         {cartDetail.product.name_product}
                       </Text>
                       <Text style={styles.status}>Status: {item.status}</Text>
-                      <Text style={styles.price}>
-                        Price: {item.total_amount}
+                      <Text style={styles.shippingStatus}>
+                        Shipping Status:{" "}
+                        {cartDetail.arrival_shipping_status === "UNCONFIRMED"
+                          ? "Belum Dikirim"
+                          : cartDetail.arrival_shipping_status === "PACKING"
+                          ? "Disiapkan"
+                          : cartDetail.arrival_shipping_status === "SHIPPED"
+                          ? "Dikirim"
+                          : cartDetail.arrival_shipping_status === "ARRIVED"
+                          ? "Sampai"
+                          : "Belum Dikirim"}
                       </Text>
                       <Text style={styles.qty}>Quantity: {cartDetail.qty}</Text>
                     </View>
                   </>
                 )}
-              </React.Fragment>
+              </View>
             ))}
+            <Text style={[styles.price, styles.centerText]}>
+              Total Price: {item.total_amount}
+            </Text>
             {screen === "SellerTransactionScreen" && (
               <View style={styles.buttonContainer}>
                 <TouchableOpacity
@@ -177,15 +197,17 @@ const Pending = ({ transactions, handleGetAllTransactions, screen }) => {
                   onPress={() => {
                     handleConfirmTransaction(item.id);
                   }}
+                  delayPressIn={1000}
                 >
-                  <Text style={styles.buttonText}>Confirm</Text>
+                  <Text style={styles.buttonText}>Konfirmasi</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.declineButton}
                   title="Decline"
                   onPress={() => handleDeclineTransaction(item.id)}
+                  delayPressIn={1000}
                 >
-                  <Text style={styles.buttonText}>Decline</Text>
+                  <Text style={styles.buttonText}>Tolak</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -205,6 +227,9 @@ const Pending = ({ transactions, handleGetAllTransactions, screen }) => {
           data={pendingTransactions}
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
         />
       ) : (
         <View style={styles.messageContainer}>

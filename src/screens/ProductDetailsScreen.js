@@ -1,17 +1,26 @@
 import { Ionicons, SimpleLineIcons, Fontisto } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
-import { Text, TouchableOpacity, View, Alert, Linking } from "react-native";
+import {
+  Text,
+  TouchableOpacity,
+  View,
+  Alert,
+  Linking,
+  ScrollView,
+  Image,
+} from "react-native";
 import { SliderBox } from "react-native-image-slider-box";
 import { COLORS } from "../constants/theme";
 import styles from "./styles/productDetails.style";
-import { ScrollView } from "react-native-gesture-handler";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Tooltip from "react-native-walkthrough-tooltip";
 import { BASE_URI } from "@env";
 
 const GUEST_DETAIL_PRODUCT_URI = BASE_URI + "/api/product/guest/";
 const PRODUCT_CHECKOUT_URI = BASE_URI + "/api/cart/product/checkout";
 const CHAT_SELLER_URI = BASE_URI + "/api/message/product";
 const ADD_CART_URI = BASE_URI + "/api/cart";
+const PRODUCT_RATING_URI = BASE_URI + "/api/rating?product_id=";
 
 const ProductDetailsScreen = ({ navigation, route }) => {
   const [count, setCount] = useState(1);
@@ -20,10 +29,20 @@ const ProductDetailsScreen = ({ navigation, route }) => {
   const [error, setError] = useState(null);
   const [transactionUrl, setTransactionUrl] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [showFullName, setShowFullName] = useState(false);
   const [userId, setUserId] = useState(null);
+  const [ratings, setRatings] = useState([]);
+  const [tooltipVisible, setTooltipVisible] = useState(false);
+  const [averageRating, setAverageRating] = useState(0);
+  const [showReviews, setShowReviews] = useState(false);
+  const [selectedRatingFilter, setSelectedRatingFilter] = useState(null);
 
   const { id } = route.params;
   const noImage = [require("../assets/no-image.png")];
+
+  const handlePress = () => {
+    setShowFullName(!showFullName);
+  };
 
   const handleGetProductDetails = async () => {
     try {
@@ -36,6 +55,18 @@ const ProductDetailsScreen = ({ navigation, route }) => {
       console.log(error);
       setError(error.message);
       setIsLoading(false);
+    }
+  };
+
+  const handleGetProductRatings = async () => {
+    try {
+      const response = await fetch(`${PRODUCT_RATING_URI}${id}`);
+      const data = await response.json();
+      // console.log(data.data);
+      setRatings(data.data.data);
+      setAverageRating(data.data.average_rate_per_product);
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -124,7 +155,6 @@ const ProductDetailsScreen = ({ navigation, route }) => {
 
   const handleChatPress = async () => {
     const userToken = await AsyncStorage.getItem("token");
-    const productId = id;
     if (!userToken) {
       Alert.alert(
         "Login Terlebih Dahulu",
@@ -139,11 +169,14 @@ const ProductDetailsScreen = ({ navigation, route }) => {
     } else {
       try {
         const response = await fetch(`${CHAT_SELLER_URI}`, {
-          method: "GET",
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${userToken}`,
           },
+          body: JSON.stringify({
+            product_id: id,
+          }),
         });
         const data = await response.json();
         console.log(data);
@@ -183,8 +216,13 @@ const ProductDetailsScreen = ({ navigation, route }) => {
     }
   };
 
+  const handleRatingFilterChange = (rating) => {
+    setSelectedRatingFilter(rating);
+  };
+
   useEffect(() => {
     handleGetProductDetails();
+    handleGetProductRatings();
     const fetchUserId = async () => {
       const userId = await AsyncStorage.getItem("id");
       setUserId(userId);
@@ -192,15 +230,14 @@ const ProductDetailsScreen = ({ navigation, route }) => {
     fetchUserId();
   }, []);
 
-  // const images = product?.image_product
-  //   ? Array.isArray(product?.image_product)
-  //     ? product?.image_product
-  //     : [product?.image_product]
-  //   : noImage;
   const images = product?.images?.length ? product.images : noImage;
 
+  const filteredRatings = selectedRatingFilter
+    ? ratings.filter((rating) => rating.rate === selectedRatingFilter)
+    : ratings;
+
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <View style={styles.upperRow}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons
@@ -208,9 +245,6 @@ const ProductDetailsScreen = ({ navigation, route }) => {
             size={30}
             color={COLORS.primary}
           />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => {}}>
-          <Ionicons name="heart" size={30} color={COLORS.primary} />
         </TouchableOpacity>
       </View>
       <SliderBox
@@ -229,25 +263,47 @@ const ProductDetailsScreen = ({ navigation, route }) => {
       />
       <View style={styles.details}>
         <View style={styles.titleRow}>
-          <Text style={styles.title}>{product?.name_product}</Text>
+          <Tooltip
+            isVisible={tooltipVisible}
+            content={<Text>{product?.name_product}</Text>}
+            placement="bottom"
+            onClose={() => setTooltipVisible(false)}
+          >
+            <TouchableOpacity
+              onPress={handlePress}
+              onPressIn={() => setTooltipVisible(true)}
+              onPressOut={() => setTooltipVisible(false)}
+            >
+              <Text style={styles.title}>
+                {showFullName
+                  ? product?.name_product
+                  : product?.name_product.split(" ").slice(0, 2).join(" ")}
+              </Text>
+            </TouchableOpacity>
+          </Tooltip>
           <View style={styles.priceWrapper}>
             <Text style={styles.price}>Rp. {product?.price}</Text>
           </View>
         </View>
         <View style={styles.ratingRow}>
           <View style={styles.rating}>
-            {[1, 2, 3, 4, 5, 6].map((index) => (
-              <Ionicons key={index} name="star" size={24} color="gold" />
+            {[...Array(5)].map((_, index) => (
+              <Ionicons
+                key={index}
+                name="star"
+                size={24}
+                color={index < averageRating ? "gold" : "gray"}
+              />
             ))}
             <Text style={styles.ratingText}>
-              {"  "}(4.5){"  "}
+              {"  "}({averageRating || 0}){"  "}
             </Text>
           </View>
-          <View style={styles.rating}>
+          <View style={styles.count}>
             <TouchableOpacity onPress={() => handleIncrement()}>
               <SimpleLineIcons name="plus" size={20} />
             </TouchableOpacity>
-            <Text style={styles.ratingText}>
+            <Text style={styles.countText}>
               {"   "}
               {count}
               {"   "}
@@ -265,7 +321,7 @@ const ProductDetailsScreen = ({ navigation, route }) => {
           <Text style={styles.storeName}>{product?.store.name}</Text>
         </ScrollView>
         <View style={styles.descriptionWrapper}>
-          <Text style={styles.description}>Description</Text>
+          <Text style={styles.description}>Deskripsi</Text>
           <ScrollView
             style={{ maxHeight: 200 }}
             showsVerticalScrollIndicator={false}
@@ -273,22 +329,85 @@ const ProductDetailsScreen = ({ navigation, route }) => {
             <Text style={styles.descriptionText}>{product?.desc_product}</Text>
           </ScrollView>
         </View>
-        {/* <View style={styles.cartRow}>
-          <TouchableOpacity
-            onPress={product?.stock === 0 ? null : handleBuyPress}
-            style={product?.stock === 0 ? styles.soldOutBtn : styles.cartBtn}
-          >
-            <Text style={styles.cartTitle}>
-              {product?.stock === 0 ? "Sold Out" : "Buy Now"}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleCartPress} style={styles.addCart}>
-            <Fontisto name="shopping-bag" size={24} color={COLORS.lightWhite} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleChatPress} style={styles.sellerChat}>
-            <Fontisto name="whatsapp" size={24} color={COLORS.lightWhite} />
-          </TouchableOpacity>
-        </View> */}
+        <TouchableOpacity onPress={() => setShowReviews(!showReviews)}>
+          <Text style={styles.accordionTitle}>
+            {showReviews ? "Sembunyikan Review" : "Tampilkan Review"}
+          </Text>
+        </TouchableOpacity>
+        {showReviews && (
+          <View>
+            <View style={styles.filterContainer}>
+              {[5, 4, 3, 2, 1].map((rating) => (
+                <TouchableOpacity
+                  key={rating}
+                  style={[
+                    styles.filterButton,
+                    selectedRatingFilter === rating &&
+                      styles.selectedFilterButton,
+                  ]}
+                  onPress={() => handleRatingFilterChange(rating)}
+                >
+                  <Text
+                    style={[
+                      styles.filterButtonText,
+                      selectedRatingFilter === rating &&
+                        styles.selectedFilterButtonText,
+                    ]}
+                  >
+                    {rating} <Ionicons name="star" size={12} color="gold" />
+                  </Text>
+                </TouchableOpacity>
+              ))}
+              <TouchableOpacity
+                style={[
+                  styles.filterButton,
+                  selectedRatingFilter === null && styles.selectedFilterButton,
+                ]}
+                onPress={() => handleRatingFilterChange(null)}
+              >
+                <Text
+                  style={[
+                    styles.filterButtonText,
+                    selectedRatingFilter === null &&
+                      styles.selectedFilterButtonText,
+                  ]}
+                >
+                  All
+                </Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.reviewsContainer}>
+              {filteredRatings.length === 0 ? (
+                <Text>Tidak ada review</Text>
+              ) : (
+                filteredRatings.map((rating) => (
+                  <View key={rating.id} style={styles.reviewCard}>
+                    <View style={styles.reviewHeader}>
+                      <Image
+                        source={{ uri: rating.user.userProfile.avatar_link }}
+                        style={styles.avatar}
+                      />
+                      <Text style={styles.reviewerName}>
+                        {rating.user.userProfile.name}
+                      </Text>
+                    </View>
+                    <Text style={styles.reviewText}>{rating.review}</Text>
+                    <View style={styles.ratingReview}>
+                      {[...Array(5)].map((_, index) => (
+                        <Ionicons
+                          key={index}
+                          name="star"
+                          size={20}
+                          color={index < rating.rate ? "gold" : "grey"}
+                        />
+                      ))}
+                    </View>
+                  </View>
+                ))
+              )}
+            </View>
+          </View>
+        )}
         <View style={styles.cartRow}>
           {/* Conditional rendering based on user ID comparison */}
           {product?.user_id !== userId && (
@@ -323,7 +442,7 @@ const ProductDetailsScreen = ({ navigation, route }) => {
           )}
         </View>
       </View>
-    </View>
+    </ScrollView>
   );
 };
 

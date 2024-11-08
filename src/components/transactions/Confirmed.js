@@ -5,9 +5,9 @@ import {
   Text,
   Image,
   FlatList,
+  Alert,
   TouchableOpacity,
   Modal,
-  Alert,
   TextInput,
   RefreshControl,
   BackHandler,
@@ -188,6 +188,7 @@ const Confirmed = ({ transactions, handleGetAllTransactions, screen }) => {
             navigateToOrderDetailsScreen(item.id);
           }
         }}
+        delayPressIn={5000}
       >
         <View
           style={[
@@ -198,7 +199,7 @@ const Confirmed = ({ transactions, handleGetAllTransactions, screen }) => {
           {item.cart_details.map((cartDetail) => (
             <React.Fragment key={cartDetail.id}>
               {cartDetail.product && (
-                <>
+                <View style={styles.productContainer}>
                   <Image
                     style={styles.image}
                     source={
@@ -213,24 +214,27 @@ const Confirmed = ({ transactions, handleGetAllTransactions, screen }) => {
                       {cartDetail.product.name_product}
                     </Text>
                     <Text style={styles.status}>Status: {item.status}</Text>
+                    <Text style={styles.shippingStatus}>
+                      Shipping Status:{" "}
+                      {cartDetail.arrival_shipping_status === "UNCONFIRMED"
+                        ? "Belum Dikirim"
+                        : cartDetail.arrival_shipping_status === "PACKING"
+                        ? "Disiapkan"
+                        : cartDetail.arrival_shipping_status === "SHIPPED"
+                        ? "Dikirim"
+                        : cartDetail.arrival_shipping_status === "ARRIVED"
+                        ? "Sampai"
+                        : "Belum Dikirim"}
+                    </Text>
                     <Text style={styles.qty}>Quantity: {cartDetail.qty}</Text>
-                    {!hasMultipleProducts && (
-                      <Text style={styles.price}>
-                        Price: {item.total_amount}
-                      </Text>
-                    )}
                   </View>
-                </>
+                </View>
               )}
             </React.Fragment>
           ))}
-          {hasMultipleProducts && (
-            <View style={styles.totalAmountContainer}>
-              <Text style={styles.totalAmount}>
-                Total Amount: {item.total_amount}
-              </Text>
-            </View>
-          )}
+          <Text style={[styles.price, styles.centerText]}>
+            Total Price: {item.total_amount}
+          </Text>
           {screen === "OrderScreen" && (
             <View style={styles.buttonContainer}>
               <TouchableOpacity
@@ -239,15 +243,17 @@ const Confirmed = ({ transactions, handleGetAllTransactions, screen }) => {
                 onPress={() => {
                   handlePayTransaction(item.id);
                 }}
+                delayPressIn={1000}
               >
-                <Text style={styles.buttonText}>Pay</Text>
+                <Text style={styles.buttonText}>Bayar</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.declineButton}
                 title="Cancel"
                 onPress={() => openCancelModal(item.id)}
+                delayPressIn={1000}
               >
-                <Text style={styles.buttonText}>Cancel</Text>
+                <Text style={styles.buttonText}>Batal</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -351,15 +357,17 @@ const Confirmed = ({ transactions, handleGetAllTransactions, screen }) => {
                 onPress={() => {
                   handleCancelTransaction(selectedTransaction);
                 }}
+                delayPressIn={1000}
               >
-                <Text style={styles.modalButtonText}>Submit</Text>
+                <Text style={styles.modalButtonText}>Kirim</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.modalButtonClose}
                 title="Close"
                 onPress={() => setModalVisible(false)}
+                delayPressIn={1000}
               >
-                <Text style={styles.modalButtonText}>Close</Text>
+                <Text style={styles.modalButtonText}>Tutup</Text>
               </TouchableOpacity>
             </View>
           </View>

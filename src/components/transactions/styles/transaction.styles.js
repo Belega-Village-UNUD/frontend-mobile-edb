@@ -8,7 +8,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   itemContainer: {
-    flexDirection: "row",
     marginBottom: SIZES.medium,
     padding: SIZES.medium,
     borderRadius: SIZES.small,
@@ -17,6 +16,10 @@ const styles = StyleSheet.create({
   },
   itemContainerColumn: {
     flexDirection: "column",
+  },
+  productContainer: {
+    flexDirection: "row",
+    marginBottom: SIZES.medium,
   },
   image: {
     width: 100,
@@ -35,7 +38,7 @@ const styles = StyleSheet.create({
     fontSize: SIZES.medium,
     color: COLORS.primary,
   },
-  price: {
+  shippingStatus: {
     fontSize: SIZES.medium,
     color: COLORS.gray3,
   },
@@ -43,18 +46,15 @@ const styles = StyleSheet.create({
     fontSize: SIZES.medium,
     color: COLORS.gray3,
   },
-  message: {
+  price: {
     fontSize: SIZES.medium,
-    textAlign: "center",
     color: COLORS.gray3,
   },
-  messageContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+  centerText: {
+    textAlign: "center",
   },
   buttonContainer: {
-    flexDirection: "column",
+    flexDirection: "row",
     justifyContent: "space-between",
     marginTop: SIZES.medium,
   },
@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     borderRadius: SIZES.small,
     flex: 1,
     alignItems: "center",
-    // marginRight: SIZES.small,
+    marginRight: SIZES.small,
   },
   declineButton: {
     backgroundColor: COLORS.red,
@@ -72,13 +72,12 @@ const styles = StyleSheet.create({
     borderRadius: SIZES.small,
     flex: 1,
     alignItems: "center",
-    // marginLeft: SIZES.small,
+    marginLeft: SIZES.small,
   },
   buttonText: {
     color: COLORS.white,
     fontSize: SIZES.medium,
   },
-
   centeredView: {
     flex: 1,
     justifyContent: "center",
@@ -113,7 +112,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 10,
   },
-
   modalButton: {
     backgroundColor: COLORS.primary,
     padding: SIZES.small,
@@ -138,6 +136,15 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     marginLeft: SIZES.small,
+  },
+  messageContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  message: {
+    fontSize: SIZES.medium,
+    color: COLORS.gray3,
   },
 });
 

@@ -19,6 +19,7 @@ import CheckBox from "expo-checkbox";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CartContext } from "../provider/CartProvider";
 import { useNavigation } from "@react-navigation/native";
+import { SIZES } from "../constants/theme";
 
 const GET_CART_URI = `${BASE_URI}/api/cart`;
 const UPDATE_CART_URI = `${BASE_URI}/api/cart`;
@@ -26,7 +27,6 @@ const DELETE_CART_URI = `${BASE_URI}/api/cart`;
 const CHECKOUT_URI = `${BASE_URI}/api/cart/checkout`;
 
 export default function CartScreen() {
-  // const [cartData, setCartData] = useState([]);
   const navigation = useNavigation();
   const [isAnyItemCheckedForCheckout, setIsAnyItemCheckedForCheckout] =
     useState(false);
@@ -146,12 +146,19 @@ export default function CartScreen() {
       const checkoutItems = cartData.flatMap((store) =>
         store.carts
           .filter((cart) => cart.is_checkout)
-          .map((cart) => ({ cart_id: cart.id }))
+          .map((cart) => ({ cart_id: cart.id, store_id: store.store.id }))
       );
 
       // Check if there are items selected for checkout
       if (checkoutItems.length === 0) {
         Alert.alert("No items selected for checkout");
+        return;
+      }
+
+      // Group items by store
+      const stores = new Set(checkoutItems.map((item) => item.store_id));
+      if (stores.size > 1) {
+        Alert.alert("Checkout error", "Anda tidak bisa checkout dari dua toko");
         return;
       }
 
@@ -161,7 +168,9 @@ export default function CartScreen() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(checkoutItems), // Sending array of objects with cart_id
+        body: JSON.stringify(
+          checkoutItems.map((item) => ({ cart_id: item.cart_id }))
+        ), // Sending array of objects with cart_id
       });
 
       const data = await response.json();
@@ -171,7 +180,9 @@ export default function CartScreen() {
         Alert.alert("Checkout berhasil", "Pesanan berhasil diproses", [
           {
             text: "OK",
-            onPress: () => {},
+            onPress: () => {
+              handleGetCart(); // Reload the cart data after checkout
+            },
           },
         ]);
       } else {
@@ -214,8 +225,16 @@ export default function CartScreen() {
       <CheckBox
         value={item.is_checkout}
         onValueChange={() => handleProductCheck(storeId, item.id)}
+        style={styles.checkbox}
       />
-      <Image source={{ uri: item.image_product }} style={styles.productImage} />
+      <Image
+        source={
+          item.images && item.images.length > 0
+            ? { uri: item.images[0] }
+            : require("../assets/no-image-card.png")
+        }
+        style={styles.productImage}
+      />
       <View style={styles.productDetails}>
         <Text style={styles.productName}>{item.name_product}</Text>
         <View style={styles.productInfo}>
@@ -322,6 +341,7 @@ export default function CartScreen() {
     </SafeAreaView>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -346,8 +366,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   store: {
-    marginTop: 30,
-    padding: 20,
+    marginTop: SIZES.xLarge,
+    padding: SIZES.medium,
     backgroundColor: "#fff",
     borderRadius: 10,
     shadowColor: "#000",
@@ -363,19 +383,24 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "bold",
     color: "#333",
-    marginLeft: 15,
+    marginLeft: SIZES.large,
   },
   product: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 20,
+    padding: SIZES.medium,
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
+    marginEnd: SIZES.xxLarge,
+  },
+  checkbox: {
+    marginRight: SIZES.medium,
   },
   productImage: {
     width: 60,
     height: 60,
-    marginRight: 20,
+    marginRight: SIZES.medium,
+    borderRadius: 10,
   },
   productDetails: {
     flex: 1,
@@ -404,7 +429,7 @@ const styles = StyleSheet.create({
   qtyContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "center",
     width: 100,
   },
   centeredView: {
@@ -444,4 +469,5 @@ const styles = StyleSheet.create({
     marginVertical: 20, // Adjust the margin as needed
     paddingHorizontal: 10, // Adjust padding as needed
   },
+  cbBtn: {},
 });

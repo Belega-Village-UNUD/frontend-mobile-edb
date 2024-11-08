@@ -6,21 +6,28 @@ import {
   BackHandler,
   Button,
   StyleSheet,
+  ScrollView,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
 import { BASE_URI } from "@env";
 
 const CALCULATING_URI = BASE_URI + "/api/shipping/costs/";
 const CANCEL_TRANSACTION_URI = BASE_URI + "/api/transaction/cancel/";
-const CONFIRM_TRANSACTION_URI = BASE_URI + "/api/transaction/buyer/";
+const CONFIRM_TRANSACTION_URI = BASE_URI + "/api/transaction/buyer/final";
 
 export default function CalculationShippingScreen({ route, navigation }) {
   const { transactionId, totalAmount, status } = route.params;
   const [shippingOptions, setShippingOptions] = useState([]);
   const [selectedShippingAgent, setSelectedShippingAgent] = useState("");
+  const [selectedShippingDetails, setSelectedShippingDetails] = useState(null);
   const [totalWithShipping, setTotalWithShipping] = useState(totalAmount);
   const [isButtonClicked, setIsButtonClicked] = useState(false);
+
+  const navigateToOrderDetailsScreen = (transactionId) => {
+    navigation.navigate("OrderDetail", { transactionId });
+  };
 
   useEffect(() => {
     const checkButtonState = async () => {
@@ -38,7 +45,7 @@ export default function CalculationShippingScreen({ route, navigation }) {
     const backAction = () => {
       Alert.alert(
         "Tunggu",
-        "Apakah anda yakin ingin kembali? jika iya, transaksi akan dibatalkan.",
+        "Apakah anda yakin ingin kembali? jika iya, kalkulasi akan dibatalkan.",
         [
           {
             text: "Cancel",
@@ -149,12 +156,14 @@ export default function CalculationShippingScreen({ route, navigation }) {
         }
 
         if (response.ok) {
-          Alert.alert("Success", "Checkout confirmed!");
+          Alert.alert("Success", "Kalkulasi Berhasil");
           setIsButtonClicked(true); // Set button as clicked
           await AsyncStorage.setItem(
             `isButtonClicked_${transactionId}`,
             "true"
-          ); // Persist button state
+          );
+          // navigation.navigate("OrderScreen");
+          navigateToOrderDetailsScreen(transactionId);
         } else {
           console.error("Failed to confirm checkout:", responseData);
           Alert.alert(
@@ -184,42 +193,97 @@ export default function CalculationShippingScreen({ route, navigation }) {
     if (selectedOption) {
       const shippingCost = selectedOption.cost[0].value;
       setTotalWithShipping(totalAmount + shippingCost);
+      setSelectedShippingDetails({
+        name: selectedOption.name,
+        service: selectedOption.service,
+        cost: shippingCost,
+      });
     }
   };
 
   return (
-    <View>
-      <Text>Transaction ID: {transactionId}</Text>
-      <Text>Total Amount: Rp. {totalAmount}</Text>
-      <Text>Status: {status}</Text>
-      <Picker
-        selectedValue={selectedShippingAgent}
-        onValueChange={handleShippingAgentChange}
-      >
-        {shippingOptions.map((option, index) =>
-          option.shipping.map((shipping, shippingIndex) =>
-            shipping.costs.map((cost, costIndex) => (
-              <Picker.Item
-                key={`${index}-${shippingIndex}-${costIndex}`}
-                label={`${shipping.name} - ${cost.service} - Rp. ${cost.cost[0].value}`}
-                value={`${shipping.code}-${cost.service}`}
-              />
-            ))
-          )
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <View style={styles.container}>
+        <Text style={styles.label}>Transaction ID: {transactionId}</Text>
+        <Text style={styles.label}>Total Amount: Rp. {totalAmount}</Text>
+        <Text style={styles.label}>Status: {status}</Text>
+        <Picker
+          selectedValue={selectedShippingAgent}
+          onValueChange={handleShippingAgentChange}
+          style={styles.picker}
+        >
+          {shippingOptions.map((option, index) =>
+            option.shipping.map((shipping, shippingIndex) =>
+              shipping.costs.map((cost, costIndex) => (
+                <Picker.Item
+                  key={`${index}-${shippingIndex}-${costIndex}`}
+                  label={`${shipping.name} - ${cost.service} - Rp. ${cost.cost[0].value}`}
+                  value={`${shipping.code}-${cost.service}`}
+                />
+              ))
+            )
+          )}
+        </Picker>
+        {selectedShippingDetails && (
+          <View style={styles.selectedShippingContainer}>
+            <Text style={styles.selectedShippingText}>
+              Selected Shipping Agent: {selectedShippingDetails.name}
+            </Text>
+            <Text style={styles.selectedShippingText}>
+              Service: {selectedShippingDetails.service}
+            </Text>
+            <Text style={styles.selectedShippingText}>
+              Cost: Rp. {selectedShippingDetails.cost}
+            </Text>
+          </View>
         )}
-      </Picker>
-      <Text>Selected Shipping Agent: {selectedShippingAgent}</Text>
-      <Text>Total Amount with Shipping: Rp. {totalWithShipping}</Text>
-      <Button
-        title="Kalkulasi"
-        onPress={handleConfirmCheckout}
-        color={isButtonClicked ? "grey" : "#018675"} // Change color if clicked
-        disabled={isButtonClicked} // Disable button if clicked
-      />
-    </View>
+        <Text style={styles.label}>
+          Total Amount with Shipping: Rp. {totalWithShipping}
+        </Text>
+        <Button
+          title="Kalkulasi"
+          onPress={handleConfirmCheckout}
+          color={isButtonClicked ? "grey" : "#018675"} // Change color if clicked
+          disabled={isButtonClicked} // Disable button if clicked
+        />
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  // Add your styles here if needed
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 20,
+  },
+  container: {
+    width: "90%",
+    padding: 16,
+    backgroundColor: "#f5f5f5",
+    borderRadius: 8,
+    elevation: 3,
+  },
+  label: {
+    fontSize: 16,
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  picker: {
+    height: 50,
+    width: "100%",
+    marginBottom: 16,
+  },
+  selectedShippingContainer: {
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: "#e0e0e0",
+    borderRadius: 8,
+  },
+  selectedShippingText: {
+    fontSize: 16,
+    marginBottom: 4,
+    textAlign: "center",
+  },
 });
