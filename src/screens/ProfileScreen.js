@@ -9,7 +9,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
 import { StatusBar } from "expo-status-bar";
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
+import { CartContext } from "../provider/CartProvider";
 import {
   Alert,
   Image,
@@ -28,6 +29,7 @@ const OTP_URI = BASE_URI + "/api/auth/otp";
 const DEFAULT_AVATAR = require("../assets/images/userDefault.png");
 
 export default function ProfileScreen({ navigation }) {
+  const { clearCartData } = useContext(CartContext);
   const [userData, setUserData] = useState(null);
   const [userLogin, setUserLogin] = useState(false);
   const [isSeller, setIsSeller] = useState(false);
@@ -189,6 +191,7 @@ export default function ProfileScreen({ navigation }) {
           await AsyncStorage.removeItem("token");
           setUserLogin(false);
           setUserImage(null);
+          clearCartData();
         },
       },
     ]);
@@ -366,16 +369,6 @@ export default function ProfileScreen({ navigation }) {
                     </View>
                   </TouchableOpacity>
                 ))}
-              <TouchableOpacity onPress={() => handleOptionClick("favorite")}>
-                <View style={styles.menuItem(0.2)}>
-                  <MaterialCommunityIcons
-                    name="heart-outline"
-                    size={24}
-                    color={COLORS.primary}
-                  />
-                  <Text style={styles.menuText}>Favorit</Text>
-                </View>
-              </TouchableOpacity>
               <TouchableOpacity onPress={() => handleOptionClick("order")}>
                 <View style={styles.menuItem(0.2)}>
                   <MaterialCommunityIcons

@@ -122,6 +122,7 @@ const ProductDetailsScreen = ({ navigation, route }) => {
       );
     } else {
       try {
+        console.log("Adding to cart with count:", count); // Add this line to log the count
         const response = await fetch(`${ADD_CART_URI}`, {
           method: "POST",
           headers: {
@@ -378,7 +379,9 @@ const ProductDetailsScreen = ({ navigation, route }) => {
             </View>
             <View style={styles.reviewsContainer}>
               {filteredRatings.length === 0 ? (
-                <Text>Tidak ada review</Text>
+                <Text style={styles.noReview}>
+                  Tidak ada review yang dapat ditampilkan
+                </Text>
               ) : (
                 filteredRatings.map((rating) => (
                   <View key={rating.id} style={styles.reviewCard}>

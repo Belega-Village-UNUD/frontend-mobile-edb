@@ -161,6 +161,13 @@ const styles = StyleSheet.create({
     marginVertical: SIZES.small,
     marginHorizontal: SIZES.small,
   },
+  noReview: {
+    fontSize: SIZES.body3,
+    color: COLORS.darkGray,
+    textAlign: "left",
+    marginVertical: SIZES.xSmall - 10,
+    marginHorizontal: SIZES.large,
+  },
   reviewCard: {
     backgroundColor: COLORS.white,
     padding: SIZES.medium,

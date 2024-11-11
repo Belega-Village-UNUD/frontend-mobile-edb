@@ -21,7 +21,6 @@ import { CartContext } from "../provider/CartProvider";
 import { useNavigation } from "@react-navigation/native";
 import { SIZES } from "../constants/theme";
 
-const GET_CART_URI = `${BASE_URI}/api/cart`;
 const UPDATE_CART_URI = `${BASE_URI}/api/cart`;
 const DELETE_CART_URI = `${BASE_URI}/api/cart`;
 const CHECKOUT_URI = `${BASE_URI}/api/cart/checkout`;
@@ -30,7 +29,7 @@ export default function CartScreen() {
   const navigation = useNavigation();
   const [isAnyItemCheckedForCheckout, setIsAnyItemCheckedForCheckout] =
     useState(false);
-  const { cartData, setCartData } = useContext(CartContext);
+  const { cartData, setCartData, fetchCartData } = useContext(CartContext);
   const [modalVisible, setModalVisible] = useState(false);
   const [currentQty, setCurrentQty] = useState(0);
   const [currentProductId, setCurrentProductId] = useState(null);
@@ -62,28 +61,13 @@ export default function CartScreen() {
       console.log("Update Qty API Response:", data);
 
       if (data.success) {
-        handleGetCart();
+        fetchCartData();
         Alert.alert("Berhasil mengubah qty barang");
       }
     } catch (error) {
       console.error(error);
     } finally {
       setModalVisible(false);
-    }
-  };
-
-  const handleGetCart = async () => {
-    try {
-      let token = await AsyncStorage.getItem("token");
-      const response = await fetch(GET_CART_URI, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const data = await response.json();
-      setCartData(data.data);
-    } catch (error) {
-      console.error(error);
     }
   };
 
@@ -104,7 +88,7 @@ export default function CartScreen() {
       const data = await response.json();
 
       if (data.success) {
-        handleGetCart();
+        fetchCartData();
         Alert.alert("Berhasil menghapus barang dari keranjang");
       }
     } catch (error) {
@@ -114,7 +98,7 @@ export default function CartScreen() {
   };
 
   useEffect(() => {
-    handleGetCart();
+    fetchCartData();
   }, []);
 
   const handleStoreCheck = (storeId) => {
@@ -181,7 +165,7 @@ export default function CartScreen() {
           {
             text: "OK",
             onPress: () => {
-              handleGetCart(); // Reload the cart data after checkout
+              fetchCartData(); // Reload the cart data after checkout
             },
           },
         ]);

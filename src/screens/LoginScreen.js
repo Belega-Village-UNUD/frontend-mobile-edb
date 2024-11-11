@@ -17,6 +17,8 @@ import * as Yup from "yup";
 import { BackBtn, Button } from "../components";
 import { COLORS } from "../constants/theme";
 import styles from "./styles/login.style";
+import { CartContext } from "../provider/CartProvider";
+import { useContext } from "react";
 
 const validationSchema = Yup.object().shape({
   password: Yup.string()
@@ -36,6 +38,7 @@ const validationSchema = Yup.object().shape({
 const LOGIN_URI = BASE_URI + "/api/auth/login";
 
 export default function LoginScreen({ navigation }) {
+  const { fetchCartData } = useContext(CartContext);
   const [loader, setLoader] = useState(false);
   const [obsecureText, setObsecureText] = useState(false);
 
@@ -71,6 +74,7 @@ export default function LoginScreen({ navigation }) {
         await AsyncStorage.setItem("token", responseData.data.token);
         await AsyncStorage.setItem("id", responseData.data.payload.id);
         navigation.navigate("Bottom Navigation", { screen: "Home" });
+        fetchCartData();
       } else {
         setLoader(false);
         Alert.alert("Error", responseData.message, [
