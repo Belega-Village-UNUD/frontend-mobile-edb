@@ -62,8 +62,11 @@ const ProductDetailsScreen = ({ navigation, route }) => {
     try {
       const response = await fetch(`${PRODUCT_RATING_URI}${id}`);
       const data = await response.json();
-      // console.log(data.data);
-      setRatings(data.data.data);
+      // Sort the ratings by createdAt in descending order
+      const sortedRatings = data.data.data.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+      setRatings(sortedRatings);
       setAverageRating(data.data.average_rate_per_product);
     } catch (error) {
       console.log(error);
