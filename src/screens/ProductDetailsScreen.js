@@ -62,8 +62,11 @@ const ProductDetailsScreen = ({ navigation, route }) => {
     try {
       const response = await fetch(`${PRODUCT_RATING_URI}${id}`);
       const data = await response.json();
-      // console.log(data.data);
-      setRatings(data.data.data);
+      // Sort the ratings by createdAt in descending order
+      const sortedRatings = data.data.data.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+      setRatings(sortedRatings);
       setAverageRating(data.data.average_rate_per_product);
     } catch (error) {
       console.log(error);
@@ -122,6 +125,7 @@ const ProductDetailsScreen = ({ navigation, route }) => {
       );
     } else {
       try {
+        console.log("Adding to cart with count:", count); // Add this line to log the count
         const response = await fetch(`${ADD_CART_URI}`, {
           method: "POST",
           headers: {
@@ -378,7 +382,9 @@ const ProductDetailsScreen = ({ navigation, route }) => {
             </View>
             <View style={styles.reviewsContainer}>
               {filteredRatings.length === 0 ? (
-                <Text>Tidak ada review</Text>
+                <Text style={styles.noReview}>
+                  Tidak ada review yang dapat ditampilkan
+                </Text>
               ) : (
                 filteredRatings.map((rating) => (
                   <View key={rating.id} style={styles.reviewCard}>

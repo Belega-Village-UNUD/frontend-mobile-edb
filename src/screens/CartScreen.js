@@ -21,7 +21,6 @@ import { CartContext } from "../provider/CartProvider";
 import { useNavigation } from "@react-navigation/native";
 import { SIZES } from "../constants/theme";
 
-const GET_CART_URI = `${BASE_URI}/api/cart`;
 const UPDATE_CART_URI = `${BASE_URI}/api/cart`;
 const DELETE_CART_URI = `${BASE_URI}/api/cart`;
 const CHECKOUT_URI = `${BASE_URI}/api/cart/checkout`;
@@ -30,7 +29,7 @@ export default function CartScreen() {
   const navigation = useNavigation();
   const [isAnyItemCheckedForCheckout, setIsAnyItemCheckedForCheckout] =
     useState(false);
-  const { cartData, setCartData } = useContext(CartContext);
+  const { cartData, setCartData, fetchCartData } = useContext(CartContext);
   const [modalVisible, setModalVisible] = useState(false);
   const [currentQty, setCurrentQty] = useState(0);
   const [currentProductId, setCurrentProductId] = useState(null);
@@ -62,28 +61,13 @@ export default function CartScreen() {
       console.log("Update Qty API Response:", data);
 
       if (data.success) {
-        handleGetCart();
+        fetchCartData();
         Alert.alert("Berhasil mengubah qty barang");
       }
     } catch (error) {
       console.error(error);
     } finally {
       setModalVisible(false);
-    }
-  };
-
-  const handleGetCart = async () => {
-    try {
-      let token = await AsyncStorage.getItem("token");
-      const response = await fetch(GET_CART_URI, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const data = await response.json();
-      setCartData(data.data);
-    } catch (error) {
-      console.error(error);
     }
   };
 
@@ -104,7 +88,7 @@ export default function CartScreen() {
       const data = await response.json();
 
       if (data.success) {
-        handleGetCart();
+        fetchCartData();
         Alert.alert("Berhasil menghapus barang dari keranjang");
       }
     } catch (error) {
@@ -114,7 +98,7 @@ export default function CartScreen() {
   };
 
   useEffect(() => {
-    handleGetCart();
+    fetchCartData();
   }, []);
 
   const handleStoreCheck = (storeId) => {
@@ -140,6 +124,60 @@ export default function CartScreen() {
     );
   };
 
+  // const handleCheckout = async () => {
+  //   const token = await AsyncStorage.getItem("token");
+  //   try {
+  //     const checkoutItems = cartData.flatMap((store) =>
+  //       store.carts
+  //         .filter((cart) => cart.is_checkout)
+  //         .map((cart) => ({ cart_id: cart.id, store_id: store.store.id }))
+  //     );
+
+  //     // Check if there are items selected for checkout
+  //     if (checkoutItems.length === 0) {
+  //       Alert.alert("No items selected for checkout");
+  //       return;
+  //     }
+
+  //     // Group items by store
+  //     // const stores = new Set(checkoutItems.map((item) => item.store_id));
+  //     // if (stores.size > 1) {
+  //     //   Alert.alert("Checkout error", "Anda tidak bisa checkout dari dua toko");
+  //     //   return;
+  //     // }
+
+  //     const response = await fetch(CHECKOUT_URI, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //       body: JSON.stringify(
+  //         checkoutItems.map((item) => ({ cart_id: item.cart_id }))
+  //       ), // Sending array of objects with cart_id
+  //     });
+
+  //     const data = await response.json();
+  //     console.log("Checkout API Response:", data);
+
+  //     if (response.status === 200 && data.success) {
+  //       Alert.alert("Checkout berhasil", "Pesanan berhasil diproses", [
+  //         {
+  //           text: "OK",
+  //           onPress: () => {
+  //             fetchCartData(); // Reload the cart data after checkout
+  //           },
+  //         },
+  //       ]);
+  //     } else {
+  //       Alert.alert("Checkout error", data.message);
+  //     }
+  //   } catch (error) {
+  //     console.error(error);
+  //     Alert.alert("Checkout error", "An error occurred during checkout.");
+  //   }
+  // };
+
   const handleCheckout = async () => {
     const token = await AsyncStorage.getItem("token");
     try {
@@ -156,37 +194,54 @@ export default function CartScreen() {
       }
 
       // Group items by store
-      const stores = new Set(checkoutItems.map((item) => item.store_id));
-      if (stores.size > 1) {
-        Alert.alert("Checkout error", "Anda tidak bisa checkout dari dua toko");
-        return;
-      }
+      const storeGroups = checkoutItems.reduce((acc, item) => {
+        if (!acc[item.store_id]) {
+          acc[item.store_id] = [];
+        }
+        acc[item.store_id].push(item.cart_id);
+        return acc;
+      }, {});
 
-      const response = await fetch(CHECKOUT_URI, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(
-          checkoutItems.map((item) => ({ cart_id: item.cart_id }))
-        ), // Sending array of objects with cart_id
+      // Send separate requests for each store
+      const promises = Object.keys(storeGroups).map(async (storeId) => {
+        const response = await fetch(CHECKOUT_URI, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(
+            storeGroups[storeId].map((cart_id) => ({ cart_id }))
+          ),
+        });
+
+        const data = await response.json();
+        console.log("Checkout API Response:", data);
+
+        if (response.status === 200 && data.success) {
+          return { success: true };
+        } else {
+          return { success: false, message: data.message };
+        }
       });
 
-      const data = await response.json();
-      console.log("Checkout API Response:", data);
+      const results = await Promise.all(promises);
 
-      if (response.status === 200 && data.success) {
+      if (results.every((result) => result.success)) {
         Alert.alert("Checkout berhasil", "Pesanan berhasil diproses", [
           {
             text: "OK",
             onPress: () => {
-              handleGetCart(); // Reload the cart data after checkout
+              fetchCartData(); // Reload the cart data after checkout
             },
           },
         ]);
       } else {
-        Alert.alert("Checkout error", data.message);
+        const errorMessage = results
+          .filter((result) => !result.success)
+          .map((result) => result.message)
+          .join("\n");
+        Alert.alert("Checkout error", errorMessage);
       }
     } catch (error) {
       console.error(error);

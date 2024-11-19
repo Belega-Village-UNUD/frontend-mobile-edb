@@ -1,3 +1,4 @@
+// src/screens/HomeScreen.js
 import React, { useContext, useEffect } from "react";
 import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -8,7 +9,12 @@ import ProductRow from "../components/products/ProductRow";
 import styles from "./styles/home.style";
 
 export default function HomeScreen() {
-  const { cartData } = useContext(CartContext);
+  const { cartData, fetchCartData } = useContext(CartContext);
+
+  useEffect(() => {
+    fetchCartData();
+  }, []);
+
   const totalQty = cartData
     ? cartData.reduce(
         (total, store) =>
