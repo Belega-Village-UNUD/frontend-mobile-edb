@@ -15,12 +15,14 @@ import styles from "./styles/productDetails.style";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Tooltip from "react-native-walkthrough-tooltip";
 import { BASE_URI } from "@env";
+import StoreInfoCard from "../components/StoreInfoCard";
 
 const GUEST_DETAIL_PRODUCT_URI = BASE_URI + "/api/product/guest/";
 const PRODUCT_CHECKOUT_URI = BASE_URI + "/api/cart/product/checkout";
 const CHAT_SELLER_URI = BASE_URI + "/api/message/product";
 const ADD_CART_URI = BASE_URI + "/api/cart";
 const PRODUCT_RATING_URI = BASE_URI + "/api/rating?product_id=";
+const STORE_RATINGS_URI = BASE_URI + "/api/rating/store?store_id=";
 
 const ProductDetailsScreen = ({ navigation, route }) => {
   const [count, setCount] = useState(1);
@@ -36,6 +38,8 @@ const ProductDetailsScreen = ({ navigation, route }) => {
   const [averageRating, setAverageRating] = useState(0);
   const [showReviews, setShowReviews] = useState(false);
   const [selectedRatingFilter, setSelectedRatingFilter] = useState(null);
+  const [storeAverageRating, setStoreAverageRating] = useState(null); // Add state for store average rating
+  const [storeReviewCount, setStoreReviewCount] = useState(0); // Add state for store review count
 
   const { id } = route.params;
   const noImage = [require("../assets/no-image.png")];
@@ -68,6 +72,17 @@ const ProductDetailsScreen = ({ navigation, route }) => {
       );
       setRatings(sortedRatings);
       setAverageRating(data.data.average_rate_per_product);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleGetStoreRatings = async (storeId) => {
+    try {
+      const response = await fetch(`${STORE_RATINGS_URI}${storeId}`);
+      const data = await response.json();
+      setStoreAverageRating(data.data.average_rate_store || 0); // Set the store average rating
+      setStoreReviewCount(data.data.total_reviewers || 0); // Set the store review count
     } catch (error) {
       console.log(error);
     }
@@ -234,6 +249,12 @@ const ProductDetailsScreen = ({ navigation, route }) => {
     fetchUserId();
   }, []);
 
+  useEffect(() => {
+    if (product?.store?.id) {
+      handleGetStoreRatings(product.store.id); // Fetch store ratings
+    }
+  }, [product?.store?.id]);
+
   const images = product?.images?.length ? product.images : noImage;
 
   const filteredRatings = selectedRatingFilter
@@ -285,6 +306,9 @@ const ProductDetailsScreen = ({ navigation, route }) => {
               </Text>
             </TouchableOpacity>
           </Tooltip>
+          {product?.is_preorder && (
+            <Text style={{ color: "red", fontWeight: "bold" }}>(preorder)</Text>
+          )}
           <View style={styles.priceWrapper}>
             <Text style={styles.price}>Rp. {product?.price}</Text>
           </View>
@@ -317,13 +341,20 @@ const ProductDetailsScreen = ({ navigation, route }) => {
             </TouchableOpacity>
           </View>
         </View>
-        <ScrollView
-          style={styles.storeNameContainer}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-        >
-          <Text style={styles.storeName}>{product?.store.name}</Text>
-        </ScrollView>
+        {product?.store && (
+          <StoreInfoCard
+            storeDetails={product.store}
+            onPress={() =>
+              navigation.navigate("StoreProducts", {
+                storeId: product.store.id,
+                storeName: product.store.name,
+              })
+            }
+            style={{ marginTop: 25, marginRight: 20 }}
+            averageRating={storeAverageRating} // Pass the store average rating
+            reviewCount={storeReviewCount} // Pass the store review count
+          />
+        )}
         <View style={styles.descriptionWrapper}>
           <Text style={styles.description}>Deskripsi</Text>
           <ScrollView
@@ -335,7 +366,7 @@ const ProductDetailsScreen = ({ navigation, route }) => {
         </View>
         <TouchableOpacity onPress={() => setShowReviews(!showReviews)}>
           <Text style={styles.accordionTitle}>
-            {showReviews ? "Sembunyikan Review" : "Tampilkan Review"}
+            {showReviews ? "Sembunyikan Ulasan" : "Tampilkan Ulasan"}
           </Text>
         </TouchableOpacity>
         {showReviews && (
@@ -376,7 +407,7 @@ const ProductDetailsScreen = ({ navigation, route }) => {
                       styles.selectedFilterButtonText,
                   ]}
                 >
-                  All
+                  Semua
                 </Text>
               </TouchableOpacity>
             </View>

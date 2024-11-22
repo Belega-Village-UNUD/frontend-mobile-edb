@@ -178,6 +178,77 @@ export default function CartScreen() {
   //   }
   // };
 
+  // const handleCheckout = async () => {
+  //   const token = await AsyncStorage.getItem("token");
+  //   try {
+  //     const checkoutItems = cartData.flatMap((store) =>
+  //       store.carts
+  //         .filter((cart) => cart.is_checkout)
+  //         .map((cart) => ({ cart_id: cart.id, store_id: store.store.id }))
+  //     );
+
+  //     // Check if there are items selected for checkout
+  //     if (checkoutItems.length === 0) {
+  //       Alert.alert("No items selected for checkout");
+  //       return;
+  //     }
+
+  //     // Group items by store
+  //     const storeGroups = checkoutItems.reduce((acc, item) => {
+  //       if (!acc[item.store_id]) {
+  //         acc[item.store_id] = [];
+  //       }
+  //       acc[item.store_id].push(item.cart_id);
+  //       return acc;
+  //     }, {});
+
+  //     // Send separate requests for each store
+  //     const promises = Object.keys(storeGroups).map(async (storeId) => {
+  //       const response = await fetch(CHECKOUT_URI, {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //         body: JSON.stringify(
+  //           storeGroups[storeId].map((cart_id) => ({ cart_id }))
+  //         ),
+  //       });
+
+  //       const data = await response.json();
+  //       console.log("Checkout API Response:", data);
+
+  //       if (response.status === 200 && data.success) {
+  //         return { success: true };
+  //       } else {
+  //         return { success: false, message: data.message };
+  //       }
+  //     });
+
+  //     const results = await Promise.all(promises);
+
+  //     if (results.every((result) => result.success)) {
+  //       Alert.alert("Checkout berhasil", "Pesanan berhasil diproses", [
+  //         {
+  //           text: "OK",
+  //           onPress: () => {
+  //             fetchCartData(); // Reload the cart data after checkout
+  //           },
+  //         },
+  //       ]);
+  //     } else {
+  //       const errorMessage = results
+  //         .filter((result) => !result.success)
+  //         .map((result) => result.message)
+  //         .join("\n");
+  //       Alert.alert("Checkout error", errorMessage);
+  //     }
+  //   } catch (error) {
+  //     console.error(error);
+  //     Alert.alert("Checkout error", "An error occurred during checkout.");
+  //   }
+  // };
+
   const handleCheckout = async () => {
     const token = await AsyncStorage.getItem("token");
     try {
@@ -193,7 +264,7 @@ export default function CartScreen() {
         return;
       }
 
-      // Group items by store
+      // Group items by store and separate each item into a new transaction
       const storeGroups = checkoutItems.reduce((acc, item) => {
         if (!acc[item.store_id]) {
           acc[item.store_id] = [];
@@ -202,28 +273,28 @@ export default function CartScreen() {
         return acc;
       }, {});
 
-      // Send separate requests for each store
-      const promises = Object.keys(storeGroups).map(async (storeId) => {
-        const response = await fetch(CHECKOUT_URI, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(
-            storeGroups[storeId].map((cart_id) => ({ cart_id }))
-          ),
-        });
+      // Send separate requests for each item in each store
+      const promises = Object.keys(storeGroups).flatMap((storeId) =>
+        storeGroups[storeId].map(async (cart_id) => {
+          const response = await fetch(CHECKOUT_URI, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify([{ cart_id }]),
+          });
 
-        const data = await response.json();
-        console.log("Checkout API Response:", data);
+          const data = await response.json();
+          console.log("Checkout API Response:", data);
 
-        if (response.status === 200 && data.success) {
-          return { success: true };
-        } else {
-          return { success: false, message: data.message };
-        }
-      });
+          if (response.status === 200 && data.success) {
+            return { success: true };
+          } else {
+            return { success: false, message: data.message };
+          }
+        })
+      );
 
       const results = await Promise.all(promises);
 

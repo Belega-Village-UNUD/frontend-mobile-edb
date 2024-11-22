@@ -18,6 +18,7 @@ import {
   TransactionDetailScreen,
   OrderDetailScreen,
   CalculationShippingScreen,
+  StoreProductsScreen,
 } from "./src/screens";
 
 const Stack = createNativeStackNavigator();
@@ -61,6 +62,7 @@ export default function App() {
             name="ProductDetails"
             component={ProductDetailsScreen}
           />
+          <Stack.Screen name="StoreProducts" component={StoreProductsScreen} />
           <Stack.Screen name="ProductList" component={ProductScreen} />
           <Stack.Screen name="OrderNav" component={OrderScreen} />
           <Stack.Screen
