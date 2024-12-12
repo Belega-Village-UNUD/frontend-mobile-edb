@@ -7,24 +7,14 @@ on:
       - "src/**"
       - ".github/workflows/**"
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: belega-village-unud/backend-api-edb
-  COMMIT_SHA: ${{ github.sha }}
-  REPO: backend-api-edb
-  INSTANCE_NAME: belega-instance
-  ZONE: asia-southeast2-a
-
 jobs:
   eslint:
-    needs: setup
     runs-on: ubuntu-latest
     environment: staging
     permissions:
       contents: read
       actions: read
       security-events: write
-      packages: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
