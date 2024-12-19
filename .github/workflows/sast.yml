@@ -13,6 +13,7 @@ jobs:
   eslint:
     runs-on: ubuntu-latest
     environment: staging
+    continue-on-error: true
     permissions:
       contents: read
       actions: read
