@@ -61,7 +61,8 @@ jobs:
         uses: bearer/bearer-action@v2
         id: run-bearer-scan
         with:
-          format: sarif output: ${{ env.REPO }}-${{ env.COMMIT_SHA }}-security.sarif
+          format: sarif
+          output: ${{ env.REPO }}-${{ env.COMMIT_SHA }}-security.sarif
 
       - name: Upload analysis results to GitHub
         uses: github/codeql-action/upload-sarif@v3
