@@ -3,9 +3,11 @@ name: SAST Mobile
 on:
   push:
     branches: ["staging"]
-    paths:
-      - "src/**"
-      - ".github/workflows/**"
+    paths-ignore: ["staging"]
+
+env:
+  COMMIT_SHA: ${{ github.sha }}
+  REPO: frontend-mobile-edb
 
 jobs:
   eslint:
@@ -38,4 +40,33 @@ jobs:
         if: success() || failure()
         with:
           sarif_file: eslint-result.sarif
+          wait-for-processing: true
+
+  sast-bearer-cli:
+    needs: eslint
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    environment: staging
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
+      packages: read
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Bearer
+        uses: bearer/bearer-action@v2
+        id: run-bearer-scan
+        with:
+          format: sarif output: ${{ env.REPO }}-${{ env.COMMIT_SHA }}-security.sarif
+
+      - name: Upload analysis results to GitHub
+        uses: github/codeql-action/upload-sarif@v3
+        id: upload-bearer-result
+        if: success() || failure()
+        with:
+          sarif_file: ${{ env.REPO }}-${{ env.COMMIT_SHA }}-security.sarif
           wait-for-processing: true
